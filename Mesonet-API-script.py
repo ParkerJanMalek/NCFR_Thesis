@@ -9,26 +9,27 @@ token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 #test
 # Create API query string
 args = {
-    'start':'201806010000',
-    'end':'201806070000',
+    'start':'202106010000',
+    'end':'202106070000',
     'obtimezone':'UTC',
-    'vars':'air_temp',
-    'stids':'KSEA',
-    'units':'temp|F',
+    'vars':'precip_accum_one_hour',
+    'stids': 'ksea',
+        #['C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO'],
+    'units':'precip|in',
     'token':token
 }
 
-apiString = urllib.urlencode(args)
-url = "http://api.mesowest.net/v2/stations/timeseries"
+apiString = urllib.parse.urlencode(args)
+url = "https://api.synopticdata.com/v2/stations/timeseries"
 fullUrl = '{}?{}'.format(url,apiString)
 
 # Open the URL and convert the returned JSON into a dictionary
-response = urllib.urlopen(fullUrl)
+response = urllib.request.urlopen(fullUrl)
 responseDict = json.loads(response.read())
 
 # Isolate the time and temperature from the response dictionary
 dateTime = responseDict['STATION'][0]['OBSERVATIONS']['date_time']
-airT = responseDict['STATION'][0]['OBSERVATIONS']['air_temp_set_1']
+airT = responseDict['STATION'][0]['OBSERVATIONS'][args['vars']+'_set_1']
 ksea = pd.Series(airT,index=pd.to_datetime(dateTime))
 
 # Retain only the hourly observations
@@ -37,7 +38,7 @@ ksea = ksea.where(ksea.index.minute == 53).dropna()
 # Plotting code
 fig,ax = plt.subplots()
 ksea.plot(ax=ax)
-plt.title('KSEA Hourly Temperature ($^{\circ}$F)')
+plt.title(args['stids'] + ' Hourly Precip (mm)')
 
 # Clean up the plot a bit
 from matplotlib.dates import DayLocator, DateFormatter
