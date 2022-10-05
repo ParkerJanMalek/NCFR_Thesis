@@ -44,7 +44,7 @@ plt.title(args['stids'] + ' Hourly Precip (mm)')
 from matplotlib.dates import DayLocator, DateFormatter
 ax.xaxis.set_major_locator(DayLocator())
 ax.xaxis.set_major_formatter(DateFormatter('%d-%b'))
-ax.set_ylabel('Temperature ($^{\circ}$F)')
+ax.set_ylabel(args['units'])
 ax.grid()
 
 plt.savefig('temp2.png')
