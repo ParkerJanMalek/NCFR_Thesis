@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 # Specify request parameters (as strings)
 token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 
+#test
 # Create API query string
 args = {
     'start':'201806010000',
