@@ -17,7 +17,7 @@ def data_availability_check(station_name,token,var):
     else:
         return(False)
 
-station_name_list = 'C3WDG'#['ksfo','klax','krdd']#['C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO'],
+station_name_list = ['ksfo','klax','krdd']#['C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO'],
 
 # check for highest resolution of precip data 
 
@@ -79,6 +79,7 @@ for i in station_name_list:
         plt.plot(station_data_out,linewidth=3)
         ax.set_ylabel(args['units'],fontsize=40)
         ax.tick_params(axis='both', which='major', labelsize=40)
+        plt.xticks(rotation=90)
         ax.set_title(args['stids'] + ' Hourly Precip (mm)',fontsize=40)
         # Clean up the plot a bit
         from matplotlib.dates import DayLocator, DateFormatter
@@ -105,5 +106,5 @@ for i in station_name_list:
         ax1.set_title('Precip occurrances for ' + station_name + ' where hourly rainfall rates exceed ' + str(percentile_95) + ' mm',fontsize=70)
         ax1.tick_params(axis='both', which='major', labelsize=40)
         fig1.savefig('freq_over_exceedance_'+station_name+'.png')
-else:
-    print("No data available")
+    else:
+        print("No data available")
