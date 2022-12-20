@@ -128,6 +128,17 @@ for i in station_name_list:
                                                                  threshold_exceedance_points_99.index.month,
                                                                  threshold_exceedance_points_99.index.day]).count()
         
+        cum_sum_precip = station_data_out.groupby([station_data_out.index.year,
+                                                 station_data_out.index.month,
+                                                 station_data_out.index.day]).cumsum()
+        
+        
+        cum_sum_precip_t = cum_sum_precip.reset_index()
+        
+        cols= ["index"]
+        
+        cum_sum_precip_t['Date'] = cum_sum_precip_t[cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
+        
         
         cum_precip = station_data_hourly.groupby([station_data_hourly.index.year,
                                                  station_data_hourly.index.month,
@@ -166,7 +177,7 @@ for i in station_name_list:
         ax2.bar(t2["Date"][t_Yuba_Feather_RR],t2[0][t_Yuba_Feather_RR],color="green",label="Yuba Feather/Russian River")
         ax2.bar(t2["Date"][t_Santa_Ana],t2[0][t_Santa_Ana],color="blue",label="Santa Ana")
         #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
-        ax2.set_ylabel('daily precip accumulation',fontsize=70)
+        ax2.set_ylabel('daily precip accumulation (mm)',fontsize=70)
         ax2.set_title('Precip test',fontsize=70)
         ax2.tick_params(axis='both', which='major', labelsize=40)
         ax2.legend(loc="upper left",fontsize=70)
@@ -176,6 +187,21 @@ for i in station_name_list:
         t2[t_Yuba_Feather_RR].to_csv(station_name + '_YubaFeather.csv')
         t2[t_Santa_Ana].to_csv(station_name + '_SantaAna.csv')
         t2.to_csv(station_name + '.csv')
+        
+        
+        fig2,ax2 = plt.subplots(figsize=(400, 50))
+        #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
+       # t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
+        ax2.plot(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0],cum_sum_precip_t[0].loc[cum_sum_precip_t[0] > 0],color="red")
+        #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
+        ax2.set_ylabel('daily precip accumulation (mm)',fontsize=70)
+        ax2.set_title('Precip test',fontsize=70)
+        ax2.tick_params(axis='both', which='major', labelsize=40)
+       # ax2.legend(loc="upper left",fontsize=70)
+        ax2.set_xticks(np.arange(1,len(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0]),600))
+        fig2.savefig(station_name + "_"+args['vars'] + 'cumsum.png')
+        #cum_sum_precip_t.to_csv('test.csv')
+       # station_data_out.to_csv('test2.csv')
         print(station_name)
     else:
         print("No data available for " + station_name)
