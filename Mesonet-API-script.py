@@ -19,7 +19,7 @@ def data_availability_check(station_name,token,var):
     else:
         return(False)
 #['ksfo','klax','krdd','ksmo','kcic','kpdx']'ksfo','klax','krdd','ksmo','kcic',#
-station_name_list = ['klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic']#,'C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+station_name_list = ['klax']#,'krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic']#,'C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 
 
 AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
@@ -128,9 +128,9 @@ for i in station_name_list:
                                                                  threshold_exceedance_points_99.index.month,
                                                                  threshold_exceedance_points_99.index.day]).count()
         
-        cum_sum_precip = station_data_out.groupby([station_data_out.index.year,
-                                                 station_data_out.index.month,
-                                                 station_data_out.index.day]).cumsum()
+        cum_sum_precip = station_data_hourly.groupby([station_data_hourly.index.year,
+                                                 station_data_hourly.index.month,
+                                                 station_data_hourly.index.day]).cumsum()
         
         
         cum_sum_precip_t = cum_sum_precip.reset_index()
@@ -188,18 +188,21 @@ for i in station_name_list:
         t2[t_Santa_Ana].to_csv(station_name + '_SantaAna.csv')
         t2.to_csv(station_name + '.csv')
         
+     #isolate day, plot cumulation
+     
+        #Date = 
         
-        fig2,ax2 = plt.subplots(figsize=(400, 50))
+        fig3,ax3 = plt.subplots(figsize=(400, 50))
         #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
        # t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-        ax2.plot(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0],cum_sum_precip_t[0].loc[cum_sum_precip_t[0] > 0],color="red")
+        ax3.plot(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0],cum_sum_precip_t[0].loc[cum_sum_precip_t[0] > 0],color="red")
         #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
-        ax2.set_ylabel('daily precip accumulation (mm)',fontsize=70)
-        ax2.set_title('Precip test',fontsize=70)
-        ax2.tick_params(axis='both', which='major', labelsize=40)
+        ax3.set_ylabel('daily precip accumulation (mm)',fontsize=70)
+        ax3.set_title('Precip test',fontsize=70)
+        ax3.tick_params(axis='both', which='major', labelsize=40)
        # ax2.legend(loc="upper left",fontsize=70)
-        ax2.set_xticks(np.arange(1,len(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0]),600))
-        fig2.savefig(station_name + "_"+args['vars'] + 'cumsum.png')
+        ax3.set_xticks(np.arange(1,len(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0]),600))
+        fig3.savefig(station_name + "_"+args['vars'] + 'cumsum.png')
         #cum_sum_precip_t.to_csv('test.csv')
        # station_data_out.to_csv('test2.csv')
         print(station_name)
