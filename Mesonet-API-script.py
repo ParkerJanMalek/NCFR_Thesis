@@ -13,6 +13,7 @@ token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 #test
 # Create API query string
 
+
 def data_availability_check(station_name,token,var):
     if responseDict_por['SUMMARY']['RESPONSE_MESSAGE'] == 'OK':
         return(True)
@@ -136,9 +137,9 @@ for i in station_name_list:
         cum_sum_precip_t = cum_sum_precip.reset_index()
         
         cols= ["index"]
-        
+      #  cum_sum_precip_t['Date'] = datetime.strptime(cum_sum_precip_t["Date"],"%Y-%m-%dT%H:%M:%S.%fZ")
         cum_sum_precip_t['Date'] = cum_sum_precip_t[cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
-        
+        cum_sum_precip_t['Date'] = pd.to_datetime(cum_sum_precip_t["Date"])
         
         cum_precip = station_data_hourly.groupby([station_data_hourly.index.year,
                                                  station_data_hourly.index.month,
@@ -190,19 +191,20 @@ for i in station_name_list:
         
      #isolate day, plot cumulation
      
-        #Date = 
-        
-        fig3,ax3 = plt.subplots(figsize=(400, 50))
+        Date = pd.to_datetime("2021-12-30")
+        fig3,ax3 = plt.subplots(figsize=(60, 60))
+        cumsum_date = cum_sum_precip_t["Date"].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
+        cumsum_precip_value  = cum_sum_precip_t[0].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
         #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
        # t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-        ax3.plot(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0],cum_sum_precip_t[0].loc[cum_sum_precip_t[0] > 0],color="red")
+        ax3.plot(cumsum_date,cumsum_precip_value,color="red")
         #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
         ax3.set_ylabel('daily precip accumulation (mm)',fontsize=70)
         ax3.set_title('Precip test',fontsize=70)
         ax3.tick_params(axis='both', which='major', labelsize=40)
        # ax2.legend(loc="upper left",fontsize=70)
-        ax3.set_xticks(np.arange(1,len(cum_sum_precip_t["Date"].loc[cum_sum_precip_t[0] > 0]),600))
-        fig3.savefig(station_name + "_"+args['vars'] + 'cumsum.png')
+        #ax3.set_xticks(np.arange(1,len(cumsum_date),1))
+        fig3.savefig(station_name + "_"+args['vars'] + 'cumsumt.png')
         #cum_sum_precip_t.to_csv('test.csv')
        # station_data_out.to_csv('test2.csv')
         print(station_name)
