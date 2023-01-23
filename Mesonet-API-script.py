@@ -7,6 +7,28 @@ from datetime import datetime
 import scipy.io
 import numpy as np
 
+
+# f
+
+# checks for missingness in kstatus for each timestep
+# 
+# for i in range(0,len(kstatus[0,:])):
+#     print(str(np.all(np.isnan(np.array(kstatus[:,i])))) + " " + str(i) + " " + str(float(kstatus.lat[i])))
+
+# for i in range(0,len(landfall[0,:,0])):
+#     for j in range(0,len(landfall[0,0,:])):
+#         print(str(np.all(np.isnan(np.array(landfall[:,i,j])))) + " " 
+#               + str(i) + "," + str(j) + " " + str(float(landfall.lat[i]))
+#               + "," +str(float(landfall.lon[j])))
+
+
+#AR_termination_CA = kstatus[:,(kstatus.lat<= 60) & (kstatus.lat >= 0)]
+#latlon[:,(latlon.lat<= 40) & (latlon.lat >= 37.5),(latlon.lon<= 180+125) & (latlon.lon >= 180+110)]
+AR_termination_CA = kstatus.isel((kstatus.lat<= 60) & (kstatus.lat >= 0))
+
+
+
+AR_Catalog_MERRA = pd.DataFrame(fds.time,fds.lat,fds.lon)
 # Specify request parameters (as strings)
 token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 
@@ -45,7 +67,7 @@ var = 'precip_accum_one_hour'
 unit = 'precip|mm'
 
 
-for i in station_name_list:
+
     station_name = i
     args_por = {
         'obtimezone':'UTC',
@@ -191,7 +213,7 @@ for i in station_name_list:
         
      #isolate day, plot cumulation
      
-        Date = pd.to_datetime("2021-12-30")
+        Date = pd.to_datetime("2010-12-19")
         fig3,ax3 = plt.subplots(figsize=(60, 60))
         cumsum_date = cum_sum_precip_t["Date"].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
         cumsum_precip_value  = cum_sum_precip_t[0].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
@@ -204,7 +226,7 @@ for i in station_name_list:
         ax3.tick_params(axis='both', which='major', labelsize=40)
        # ax2.legend(loc="upper left",fontsize=70)
         #ax3.set_xticks(np.arange(1,len(cumsum_date),1))
-        fig3.savefig(station_name + "_"+args['vars'] + 'cumsumt.png')
+        fig3.savefig(station_name + "_"+args['vars'] + 'cumsumt2010.png')
         #cum_sum_precip_t.to_csv('test.csv')
        # station_data_out.to_csv('test2.csv')
         print(station_name)
