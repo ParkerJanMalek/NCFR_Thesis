@@ -6,41 +6,35 @@ import datetime
 from datetime import datetime
 import scipy.io
 import numpy as np
+import pickle
+from matplotlib.dates import DayLocator, DateFormatter
 
-
-# f
-
-# checks for missingness in kstatus for each timestep
-# 
-# for i in range(0,len(kstatus[0,:])):
-#     print(str(np.all(np.isnan(np.array(kstatus[:,i])))) + " " + str(i) + " " + str(float(kstatus.lat[i])))
-
-# for i in range(0,len(landfall[0,:,0])):
-#     for j in range(0,len(landfall[0,0,:])):
-#         print(str(np.all(np.isnan(np.array(landfall[:,i,j])))) + " " 
-#               + str(i) + "," + str(j) + " " + str(float(landfall.lat[i]))
-#               + "," +str(float(landfall.lon[j])))
-
-
-#AR_termination_CA = kstatus[:,(kstatus.lat<= 60) & (kstatus.lat >= 0)]
-#latlon[:,(latlon.lat<= 40) & (latlon.lat >= 37.5),(latlon.lon<= 180+125) & (latlon.lon >= 180+110)]
-AR_termination_CA = kstatus.isel((kstatus.lat<= 60) & (kstatus.lat >= 0))
-
-
-
-AR_Catalog_MERRA = pd.DataFrame(fds.time,fds.lat,fds.lon)
 # Specify request parameters (as strings)
 token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 
-#test
-# Create API query string
 
+#open AR time series
+with open('D:\\PSU Thesis\\data\\AR_California_Landfall.pickle', 'rb') as data:
+    AR_TS = pickle.load(data)
+
+AR_point = []
+
+for i in range(0,len(AR_TS)):
+   latlon_time = [AR_TS[i][0],AR_TS[i][1]-360,AR_TS[i][2].astype(object).year,AR_TS[i][2].astype(object).month,AR_TS[i][2].astype(object).day,AR_TS[i][2].astype(object).hour]
+   AR_point.append(latlon_time)
+AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude","year","month","day","hour"])
+
+#define boundaries for reserviors
+AR_pd["Yuba-Feather"] = (AR_pd.latitude >= 37) & (AR_pd.latitude <= 40)
+AR_pd["Santa Ana"] = (AR_pd.latitude >= 32) & (AR_pd.latitude <= 37)
 
 def data_availability_check(station_name,token,var):
     if responseDict_por['SUMMARY']['RESPONSE_MESSAGE'] == 'OK':
         return(True)
     else:
         return(False)
+    
+    
 #['ksfo','klax','krdd','ksmo','kcic','kpdx']'ksfo','klax','krdd','ksmo','kcic',#
 station_name_list = ['klax']#,'krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic']#,'C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 
@@ -49,24 +43,10 @@ AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_C
 # check for highest resolution of precip data 
 
 
-ar_DMY = pd.DataFrame([AR_Catalog["Day"],AR_Catalog["Month"],AR_Catalog["Year"],
-                        AR_Catalog["Russian River"],AR_Catalog["Yuba-Feather"],
-                        AR_Catalog["Santa Ana"],AR_Catalog["California_AR"]]).T
-
-
-cols=["Year","Month","Day"]
-
-ar_DMY['Date'] = ar_DMY[cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
-
-ar_CA = ar_DMY.loc[ar_DMY["California_AR"] == "yes"]
-
-ar_Dedupe = ar_CA.drop_duplicates(subset=['Year','Month','Day','California_AR'])
-
-
 var = 'precip_accum_one_hour'
 unit = 'precip|mm'
 
-
+for i in station_name_list:
 
     station_name = i
     args_por = {
@@ -126,7 +106,6 @@ unit = 'precip|mm'
         # plt.xticks(rotation=90)
         # ax.set_title(args['stids'] + ' '+ args['units'],fontsize=40)
         # Clean up the plot a bit
-        from matplotlib.dates import DayLocator, DateFormatter
         #ax.xaxis.set_major_locator(DayLocator())
         #ax.xaxis.set_major_formatter(DateFormatter('%d-%b'))
         # ax.grid()
@@ -177,14 +156,17 @@ unit = 'precip|mm'
         
         t['Date'] = t[cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
 
-
-        t2 = t.merge(ar_Dedupe, left_on='Date', right_on='Date',how="left")
+        ar_cols = ['year','month','day']
         
-        #t2['Date']=pd.datetime(t2['Date'])
-        date_begin = t["Date"][0]
-        date_end = t["Date"][len(t["Date"])-1]
-        t_Yuba_Feather_RR = t2["Yuba-Feather"] == "yes"
-        t_Santa_Ana = t2["Santa Ana"] == "yes"
+        AR_pd['Date'] = AR_pd[ar_cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
+
+        t2 = t.merge(AR_pd, left_on='Date', right_on='Date',how="left")
+        t3 = t2.loc[(t2["Yuba-Feather"]==True)]
+        # #t2['Date']=pd.datetime(t2['Date'])
+        # date_begin = t["Date"][0]
+        # date_end = t["Date"][len(t["Date"])-1]
+        # t_Yuba_Feather_RR = t2["Yuba-Feather"] == "yes"
+        # t_Santa_Ana = t2["Santa Ana"] == "yes"
        
         # fig1,ax1 = plt.subplots(figsize=(400, 50))
         # threshold_grouping_95.plot(kind="bar")
@@ -193,42 +175,41 @@ unit = 'precip|mm'
         # ax1.tick_params(axis='both', which='major', labelsize=40)
         # fig1.savefig(args['vars'] + '_exceedance_'+station_name+'.png')
         
-        fig2,ax2 = plt.subplots(figsize=(400, 50))
-        #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
-       # t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-        ax2.bar(t2["Date"],t2[0],color="red",label="Unassociated")
-        ax2.bar(t2["Date"][t_Yuba_Feather_RR],t2[0][t_Yuba_Feather_RR],color="green",label="Yuba Feather/Russian River")
-        ax2.bar(t2["Date"][t_Santa_Ana],t2[0][t_Santa_Ana],color="blue",label="Santa Ana")
-        #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
-        ax2.set_ylabel('daily precip accumulation (mm)',fontsize=70)
-        ax2.set_title('Precip test',fontsize=70)
-        ax2.tick_params(axis='both', which='major', labelsize=40)
-        ax2.legend(loc="upper left",fontsize=70)
-        ax2.set_xticks(np.arange(1,len(t["Date"]),200))
-        fig2.savefig(args['vars'] + 'test'+station_name+'TEST2.png')
+       #  fig2,ax2 = plt.subplots(figsize=(400, 50))
+       #  #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
+       # # t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
+       #  ax2.bar(t2["Date"],t2[0],color="red",label="Unassociated")
+       #  ax2.bar(t2["Date"][t_Yuba_Feather_RR],t2[0][t_Yuba_Feather_RR],color="green",label="Yuba Feather/Russian River")
+       #  ax2.bar(t2["Date"][t_Santa_Ana],t2[0][t_Santa_Ana],color="blue",label="Santa Ana")
+       #  #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
+       #  ax2.set_ylabel('daily precip accumulation (mm)',fontsize=70)
+       #  ax2.set_title('Precip test',fontsize=70)
+       #  ax2.tick_params(axis='both', which='major', labelsize=40)
+       #  ax2.legend(loc="upper left",fontsize=70)
+       #  ax2.set_xticks(np.arange(1,len(t["Date"]),200))
+       #  fig2.savefig(args['vars'] + 'test'+station_name+'TEST2.png')
         
-        t2[t_Yuba_Feather_RR].to_csv(station_name + '_YubaFeather.csv')
-        t2[t_Santa_Ana].to_csv(station_name + '_SantaAna.csv')
-        t2.to_csv(station_name + '.csv')
+       #  t2[t_Yuba_Feather_RR].to_csv(station_name + '_YubaFeather.csv')
+       #  t2[t_Santa_Ana].to_csv(station_name + '_SantaAna.csv')
+       #  t2.to_csv(station_name + '.csv')
         
      #isolate day, plot cumulation
-     
         Date = pd.to_datetime("2010-12-19")
         fig3,ax3 = plt.subplots(figsize=(60, 60))
         cumsum_date = cum_sum_precip_t["Date"].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
         cumsum_precip_value  = cum_sum_precip_t[0].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
         #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
-       # t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
+        #t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
         ax3.plot(cumsum_date,cumsum_precip_value,color="red")
         #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
         ax3.set_ylabel('daily precip accumulation (mm)',fontsize=70)
         ax3.set_title('Precip test',fontsize=70)
         ax3.tick_params(axis='both', which='major', labelsize=40)
-       # ax2.legend(loc="upper left",fontsize=70)
+        #ax2.legend(loc="upper left",fontsize=70)
         #ax3.set_xticks(np.arange(1,len(cumsum_date),1))
         fig3.savefig(station_name + "_"+args['vars'] + 'cumsumt2010.png')
-        #cum_sum_precip_t.to_csv('test.csv')
-       # station_data_out.to_csv('test2.csv')
+        #  #cum_sum_precip_t.to_csv('test.csv')
+        # # station_data_out.to_csv('test2.csv')
         print(station_name)
     else:
         print("No data available for " + station_name)

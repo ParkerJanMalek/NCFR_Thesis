@@ -13,6 +13,7 @@ import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
 import geopandas
+import os
 from shapely.geometry import Point
 
 
@@ -28,12 +29,13 @@ kstatus = np.squeeze(fds.kstatus)
 
 #xmin xmax ymin ymax
 latlonbox = [360-124.409591, 360-114.131211, 32.5, 42]
+saved_AR_path = 'D:\\PSU Thesis\\data\\AR_California_Landfall.pickle'
 #latlonbox = [180+120, 180+110, 30, 45]
 #open AR time series
-with open('D:\\PSU Thesis\\data\\AR_California_Landfall.pickle', 'rb') as data:
+with open(saved_AR_path, 'rb') as data:
     date_AR = pickle.load(data)
 
-if(not date_AR):
+if(not os.path.exists(saved_AR_path)):
     # loop through landfall coordinates, pick ones that occur within range of bounding box described above
     # ((lat_no_nan[j] >= latlonbox[2]) & (lat_no_nan[j] <= latlonbox[3])) & 
     kid_no_nan = []
@@ -62,6 +64,7 @@ if(not date_AR):
                 date_AR.append(np.array([lat_no_nan[j],lon_no_nan[j],np.array(fds.kstatus.time)[i].astype('datetime64[h]')]))
     with open("AR_California_Landfall.pickle", "wb") as f:
         pickle.dump(date_AR, f, protocol=pickle.HIGHEST_PROTOCOL)
+        
 AR_point = []
 
 for i in range(0,len(date_AR)):
