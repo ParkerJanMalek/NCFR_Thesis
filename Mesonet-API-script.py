@@ -147,66 +147,41 @@ for i in station_name_list:
                                                  station_data_hourly.index.day]).sum()
         
         
-        t=cum_precip
+        t=cum_sum_precip_t
 
         t=t.reset_index()
 
 
-        cols=["level_0","level_1","level_2"]
-        
-        t['Date'] = t[cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
-
         ar_cols = ['year','month','day']
         
         AR_pd['Date'] = AR_pd[ar_cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
+        AR_pd['Date'] = pd.to_datetime(AR_pd["Date"])
 
-        t2 = t.merge(AR_pd, left_on='Date', right_on='Date',how="left")
+        t2 = t.concat(AR_pd, left_on='Date', right_on='Date',how="left")
         t3 = t2.loc[(t2["Yuba-Feather"]==True)]
-        # #t2['Date']=pd.datetime(t2['Date'])
-        # date_begin = t["Date"][0]
-        # date_end = t["Date"][len(t["Date"])-1]
-        # t_Yuba_Feather_RR = t2["Yuba-Feather"] == "yes"
-        # t_Santa_Ana = t2["Santa Ana"] == "yes"
-       
-        # fig1,ax1 = plt.subplots(figsize=(400, 50))
-        # threshold_grouping_95.plot(kind="bar")
-        # ax1.set_ylabel('counts',fontsize=70)
-        # ax1.set_title('Precip occurrances for ' + station_name + ' where hourly rainfall rates exceed ' + str(percentile_95) + ' mm',fontsize=70)
-        # ax1.tick_params(axis='both', which='major', labelsize=40)
-        # fig1.savefig(args['vars'] + '_exceedance_'+station_name+'.png')
-        
-       #  fig2,ax2 = plt.subplots(figsize=(400, 50))
-       #  #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
-       # # t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-       #  ax2.bar(t2["Date"],t2[0],color="red",label="Unassociated")
-       #  ax2.bar(t2["Date"][t_Yuba_Feather_RR],t2[0][t_Yuba_Feather_RR],color="green",label="Yuba Feather/Russian River")
-       #  ax2.bar(t2["Date"][t_Santa_Ana],t2[0][t_Santa_Ana],color="blue",label="Santa Ana")
-       #  #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
-       #  ax2.set_ylabel('daily precip accumulation (mm)',fontsize=70)
-       #  ax2.set_title('Precip test',fontsize=70)
-       #  ax2.tick_params(axis='both', which='major', labelsize=40)
-       #  ax2.legend(loc="upper left",fontsize=70)
-       #  ax2.set_xticks(np.arange(1,len(t["Date"]),200))
-       #  fig2.savefig(args['vars'] + 'test'+station_name+'TEST2.png')
-        
-       #  t2[t_Yuba_Feather_RR].to_csv(station_name + '_YubaFeather.csv')
-       #  t2[t_Santa_Ana].to_csv(station_name + '_SantaAna.csv')
-       #  t2.to_csv(station_name + '.csv')
+      
         
      #isolate day, plot cumulation
-        Date = pd.to_datetime("2010-12-19")
-        fig3,ax3 = plt.subplots(figsize=(60, 60))
-        cumsum_date = cum_sum_precip_t["Date"].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
-        cumsum_precip_value  = cum_sum_precip_t[0].loc[(cum_sum_precip_t["Date"].dt.month == Date.month) & (cum_sum_precip_t["Date"].dt.day == Date.day) & (cum_sum_precip_t["Date"].dt.year == Date.year) ]
+        minDate = pd.to_datetime("2010-1-01")
+        maxDate = pd.to_datetime("2010-1-30")
+        fig3,ax3 = plt.subplots(figsize=(100, 60))
+        ax3.grid()
+        cumsum_date = cum_sum_precip_t["Date"].loc[((cum_sum_precip_t["Date"].dt.month >= minDate.month) & (cum_sum_precip_t["Date"].dt.month <= maxDate.month))
+                                                   & ((cum_sum_precip_t["Date"].dt.day >= minDate.day) & (cum_sum_precip_t["Date"].dt.day <= maxDate.day))
+                                                   & ((cum_sum_precip_t["Date"].dt.year >= minDate.year) & (cum_sum_precip_t["Date"].dt.year <= maxDate.year)) ]
+        cumsum_precip_value  = cum_sum_precip_t[0].loc[((cum_sum_precip_t["Date"].dt.month >= minDate.month) & (cum_sum_precip_t["Date"].dt.month <= maxDate.month)) 
+                                                   & ((cum_sum_precip_t["Date"].dt.day >= minDate.day) & (cum_sum_precip_t["Date"].dt.day <= maxDate.day)) 
+                                                   & ((cum_sum_precip_t["Date"].dt.year >= minDate.year) & (cum_sum_precip_t["Date"].dt.year <= maxDate.year)) ]
         #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
         #t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-        ax3.plot(cumsum_date,cumsum_precip_value,color="red")
+        ax3.plot(cumsum_date, cumsum_precip_value,color="red")
         #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
-        ax3.set_ylabel('daily precip accumulation (mm)',fontsize=70)
+        ax3.set_ylabel('daily cumlative precip (mm)',fontsize=70)
         ax3.set_title('Precip test',fontsize=70)
         ax3.tick_params(axis='both', which='major', labelsize=40)
         #ax2.legend(loc="upper left",fontsize=70)
         #ax3.set_xticks(np.arange(1,len(cumsum_date),1))
+       # ax3.set_xticks(np.arange(1,len(cumsum_date),200))
         fig3.savefig(station_name + "_"+args['vars'] + 'cumsumt2010.png')
         #  #cum_sum_precip_t.to_csv('test.csv')
         # # station_data_out.to_csv('test2.csv')
