@@ -157,8 +157,9 @@ for i in station_name_list:
         AR_pd['Date'] = AR_pd[ar_cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
         AR_pd['Date'] = pd.to_datetime(AR_pd["Date"])
 
-        t2 = t.concat(AR_pd, left_on='Date', right_on='Date',how="left")
-        t3 = t2.loc[(t2["Yuba-Feather"]==True)]
+        t2 = t.merge(AR_pd, left_on='Date', right_on='Date',how="left")
+        YRR = t2.loc[(t2["Yuba-Feather"]==True)]
+        SA = t2.loc[(t2["Santa Ana"]==True)]
       
         
      #isolate day, plot cumulation
