@@ -36,7 +36,7 @@ def data_availability_check(station_name,token,var):
     
     
 #['ksfo','klax','krdd','ksmo','kcic','kpdx']'ksfo','klax','krdd','ksmo','kcic',#
-station_name_list = ['klax']#,'krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic']#,'C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+station_name_list = ["klax"]#['klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 
 
 AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
@@ -45,6 +45,8 @@ AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_C
 
 var = 'precip_accum_one_hour'
 unit = 'precip|mm'
+plot_full_record = False
+
 
 for i in station_name_list:
 
@@ -94,26 +96,10 @@ for i in station_name_list:
         value_pull = responseDict['STATION'][0]['OBSERVATIONS'][args['vars']+'_set_1']
         station_data_out = pd.Series(value_pull,index=pd.to_datetime(dateTime))
         
-        # Retain only the hourly observations
+        # resample to only the hourly observations. For inter-hourly observations, the mean of these values is taken
         station_data_hourly = station_data_out.resample('60min').mean()
-        #station_data_hourly = station_data_out.groupby(pd.Grouper(freq='60Min', offset=0, label='right')).first()
         
-        # Plotting code
-        # fig,ax = plt.subplots(figsize=(20, 20))
-        # plt.plot(station_data_hourly,linewidth=3)
-        # ax.set_ylabel(args['units'],fontsize=40)
-        # ax.tick_params(axis='both', which='major', labelsize=40)
-        # plt.xticks(rotation=90)
-        # ax.set_title(args['stids'] + ' '+ args['units'],fontsize=40)
-        # Clean up the plot a bit
-        #ax.xaxis.set_major_locator(DayLocator())
-        #ax.xaxis.set_major_formatter(DateFormatter('%d-%b'))
-        # ax.grid()
-        
-        # fig.savefig(args['vars'] + '_'+station_name+'.png')
-        
-        
-        #compute 95 percentile threshold
+        #compute statistics
         
         percentile_95 = station_data_hourly.quantile(0.95)
         percentile_99 = station_data_hourly.quantile(0.99)
@@ -155,35 +141,52 @@ for i in station_name_list:
         ar_cols = ['year','month','day']
         
         AR_pd['Date'] = AR_pd[ar_cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
-        AR_pd['Date'] = pd.to_datetime(AR_pd["Date"])
+       # AR_pd['Date'] = pd.to_datetime(AR_pd["Date"])
+        t['mergedate'] = t.Date.dt.year.astype(str) + "-" + t.Date.dt.month.astype(str) + "-" + t.Date.dt.day.astype(str)
 
-        t2 = t.merge(AR_pd, left_on='Date', right_on='Date',how="left")
+        t2 = t.merge(AR_pd, left_on='mergedate', right_on='Date',how="left")
         YRR = t2.loc[(t2["Yuba-Feather"]==True)]
         SA = t2.loc[(t2["Santa Ana"]==True)]
+        
+        merged_cumsum = t2[["index", 0, "Yuba-Feather","Santa Ana"]].drop_duplicates()
+        merged_cumsum.columns = ["Date","precip_mm","Yuba_Russian","Santa_Ana"]
       
         
      #isolate day, plot cumulation
-        minDate = pd.to_datetime("2010-1-01")
-        maxDate = pd.to_datetime("2010-1-30")
+        if(plot_full_record):
+            date_filter_cumsum = merged_cumsum
+        else: 
+            #define min and max date for range
+            minDate = pd.to_datetime("2001-01-10")
+            maxDate = pd.to_datetime("2001-01-11")
+            date_filter_cumsum = merged_cumsum.loc[((merged_cumsum["Date"].dt.month >= minDate.month) & (merged_cumsum["Date"].dt.month <= maxDate.month))
+                                                       & ((merged_cumsum["Date"].dt.day >= minDate.day) & (merged_cumsum["Date"].dt.day <= maxDate.day))
+                                                       & ((merged_cumsum["Date"].dt.year >= minDate.year) & (merged_cumsum["Date"].dt.year <= maxDate.year)) ]
+            
+        
         fig3,ax3 = plt.subplots(figsize=(100, 60))
         ax3.grid()
-        cumsum_date = cum_sum_precip_t["Date"].loc[((cum_sum_precip_t["Date"].dt.month >= minDate.month) & (cum_sum_precip_t["Date"].dt.month <= maxDate.month))
-                                                   & ((cum_sum_precip_t["Date"].dt.day >= minDate.day) & (cum_sum_precip_t["Date"].dt.day <= maxDate.day))
-                                                   & ((cum_sum_precip_t["Date"].dt.year >= minDate.year) & (cum_sum_precip_t["Date"].dt.year <= maxDate.year)) ]
-        cumsum_precip_value  = cum_sum_precip_t[0].loc[((cum_sum_precip_t["Date"].dt.month >= minDate.month) & (cum_sum_precip_t["Date"].dt.month <= maxDate.month)) 
-                                                   & ((cum_sum_precip_t["Date"].dt.day >= minDate.day) & (cum_sum_precip_t["Date"].dt.day <= maxDate.day)) 
-                                                   & ((cum_sum_precip_t["Date"].dt.year >= minDate.year) & (cum_sum_precip_t["Date"].dt.year <= maxDate.year)) ]
+        
+        
+        cumsum_date = date_filter_cumsum["Date"]
+        cumsum_precip_value  = date_filter_cumsum["precip_mm"]
+        
+        Yuba_Russian = date_filter_cumsum.loc[date_filter_cumsum.Yuba_Russian == True]
+        Santa_Ana = date_filter_cumsum.loc[date_filter_cumsum.Santa_Ana == True]
+        
         #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
         #t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-        ax3.plot(cumsum_date, cumsum_precip_value,color="red")
+        ax3.plot(cumsum_date, cumsum_precip_value,color="red",label="unaffiliated")
+        ax3.plot(Yuba_Russian.Date,Yuba_Russian.precip_mm,color="green",label="Yuba Feather/Russian River")
+        ax3.plot(Santa_Ana.Date,Santa_Ana.precip_mm,color="blue",label="Santa Ana")
         #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
         ax3.set_ylabel('daily cumlative precip (mm)',fontsize=70)
-        ax3.set_title('Precip test',fontsize=70)
+        ax3.set_title('Precip Daily Cumulative Accumulation for ' + station_name,fontsize=70)
         ax3.tick_params(axis='both', which='major', labelsize=40)
-        #ax2.legend(loc="upper left",fontsize=70)
+        ax3.legend(loc="upper left",fontsize=70)
         #ax3.set_xticks(np.arange(1,len(cumsum_date),1))
-       # ax3.set_xticks(np.arange(1,len(cumsum_date),200))
-        fig3.savefig(station_name + "_"+args['vars'] + 'cumsumt2010.png')
+        #ax3.set_xticks(np.arange(1,len(cumsum_date),10))
+        fig3.savefig(station_name + "_"+args['vars'] + '_cumsum.png')
         #  #cum_sum_precip_t.to_csv('test.csv')
         # # station_data_out.to_csv('test2.csv')
         print(station_name)

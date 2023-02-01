@@ -79,13 +79,16 @@ AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude"])
 
 california = geopandas.read_file('D:\\PSU Thesis\\data\\CA_State_TIGER2016.shp')
 california =  california.to_crs(4326)
-fig,ax = plt.subplots(figsize = (15,15))
+fig,ax = plt.subplots(figsize = (30,30))
 california.plot(ax=ax)
 geometry = [Point(xy) for xy in zip(AR_pd.longitude,AR_pd.latitude)]
 geo_df = geopandas.GeoDataFrame(geometry = geometry)
 california.crs = {'init':"epsg:4326"}
 geo_df.crs = {'init':"epsg:4326"}
-g = geo_df.plot(ax = ax, markersize = 20, color = 'red',marker = '*')
+g = geo_df.plot(ax = ax, markersize = 200, color = 'red',marker = '*',label="AR Landfall Locations")
+ax.legend(loc="upper left",fontsize=40)
+ax.set_title("Californai AR Landfall Locations")
 plt.show()
+fig.savefig('California_AR_Landfall.png')
 
 
