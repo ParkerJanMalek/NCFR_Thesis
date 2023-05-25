@@ -8,33 +8,70 @@ Pulls data based from MRMS database based on start and end dates
 """
 import datetime as dtetme
 import wget
-import pygrib
 from dateutil import rrule
 from datetime import datetime, timedelta
+import matplotlib as mpl
 import matplotlib.pyplot as plt 
 import gzip
-import pygrib
 import os
 import urllib
 import re
 import numpy as np
 from mpl_toolkits.basemap import Basemap
-import nio
 import xarray as xr
+from matplotlib.colors import Normalize
+from metpy.plots import ctables
 
 
 
-start_date = dtetme.datetime(2016,1,9,13)
-end_date = dtetme.datetime(2016,1,9,13)
+start_date = dtetme.datetime(2019,2,4,12)
+end_date = dtetme.datetime(2019,2,4,19)
 
-bound_ca = True
+outdir = ""
+
+bound_ca = False
+bound_yfrr = False
+bound_sa = True
 #bounding box California
+#min_lon = 230
+#max_lon = 250
+#min_lat = 30
+#max_lat = 45
+
+
+#bounding box Russia River
+#min_lon = 238
+#max_lon = 243
+#min_lat = 35
+#max_lat = 40
+
+#bounding box Yuba Feather
+#min_lon = 238
+#max_lon = 243
+#min_lat = 35
+#max_lat = 40
+
+#bounding box Santa Ana
+#min_lon = 238
+#max_lon = 243
+#min_lat = 30
+#max_lat = 45
 
 if (bound_ca):
-    min_lon = 230
-    max_lon = 250
-    min_lat = 30
-    max_lat = 45
+    min_lon = 238
+    max_lon = 243
+    min_lat = 33
+    max_lat = 35
+elif(bound_yfrr):
+    min_lon = 238
+    max_lon = 243
+    min_lat = 35
+    max_lat = 40
+elif(bound_sa):
+    min_lon = 238
+    max_lon = 243
+    min_lat = 33
+    max_lat = 35
 else:
    min_lon = 230.005
    max_lon = 299.994998
@@ -44,8 +81,8 @@ else:
 
 
 
-file_var = 'GaugeCorr_QPE_01H_00' #GaugeCorr_QPE_01H_00
-file_var2 = 'GaugeCorr_QPE_01H' #GaugeCorr_QPE_01H
+file_var = 'PrecipRate_00' #PrecipRate_00, GaugeCorr_QPE_01H_00
+file_var2 = 'PrecipRate' #GaugeCorr_QPE_01H,PrecipRate
 
 for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
     month = str(dt.month).zfill(2)
@@ -58,7 +95,7 @@ for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         os.remove(filename) 
         
         
-    fileupload= wget.download(url)
+    fileupload= wget.download(url, out=outdir)
     
     with gzip.open(fileupload, 'rb') as f:
         uncompressed_data = f.read()
@@ -106,22 +143,28 @@ for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
                   urcrnrlon=max_lon+1,
                   resolution='l')
 
-    
+    bm.shadedrelief() 
     bm.drawcoastlines()
     bm.drawstates()
     bm.drawcountries()
+    cbartiks = np.arange(-3,25,3)
     cf  = bm.contourf(lon2d,lat2d,ca_values)
-    cb  = bm.colorbar(cf,"bottom", size="7%", pad="10%")
+    cb  = bm.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
+    #fig.savefig('NCFR1_PRECIP_'+str(dt.year)+str(dt.month)+str(dt.day)+str(hour)+'.png')
     # fig, ax = plt.subplots(figsize=(8,8))
     # im = ax.imshow(ca_values, extent=(min_lon,max_lon, min_lat, max_lat))
     # ax.set_title(grt.name)
     # cbar = plt.colorbar(im, ax=ax)
     # cbar.ax.set_ylabel(grt.units)
     # plt.show()
-    grbs.close()
+   # grbs.close()
     
     
     if os.path.exists(temp_file_path_name):
         os.remove(temp_file_path_name)
         os.remove(filename) 
+        os.remove(temp_file_path_name+".923a8.idx")
+        
+
+
         

@@ -14,6 +14,24 @@ from matplotlib.dates import DayLocator, DateFormatter
 # Specify request parameters (as strings)
 token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 
+def count_and_sum_events(time_series):
+    event_start = []
+    event_end = []
+    event_acum = []
+    for i in range(1,len(time_series)):
+        if time_series[i] != 0 and np.all(time_series[i-24:i] == 0):
+            event_start.append(time_series.index[i])
+            start_i = i
+        if time_series[i] != 0 and np.all(time_series[i+1:i+25] == 0):
+            event_end.append(time_series.index[i])
+            end_i = i
+            event_acum.append(np.sum(time_series[start_i:end_i+1]))
+            
+            
+    return(np.array([event_start,event_end,event_acum]))
+
+            
+    return np.vectorize(lambda x: x != 0 and np.all(time_series[x-24:x+1] != 0))(np.arange(24, len(time_series)))
 
 #open AR time series
 with open('D:\\PSU Thesis\\data\\AR_California_Landfall.pickle', 'rb') as data:
@@ -22,8 +40,8 @@ with open('D:\\PSU Thesis\\data\\AR_California_Landfall.pickle', 'rb') as data:
 AR_point = []
 
 for i in range(0,len(AR_TS)):
-   latlon_time = [AR_TS[i][0],AR_TS[i][1]-360,AR_TS[i][2].astype(object).year,AR_TS[i][2].astype(object).month,AR_TS[i][2].astype(object).day,AR_TS[i][2].astype(object).hour]
-   AR_point.append(latlon_time)
+    latlon_time = [AR_TS[i][0],AR_TS[i][1]-360,AR_TS[i][2].astype(object).year,AR_TS[i][2].astype(object).month,AR_TS[i][2].astype(object).day,AR_TS[i][2].astype(object).hour]
+    AR_point.append(latlon_time)
 AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude","year","month","day","hour"])
 
 #define boundaries for reserviors
@@ -39,16 +57,31 @@ def data_availability_check(station_name,token,var):
     
 #['ksfo','klax','krdd','ksmo','kcic','kpdx']'ksfo','klax','krdd','ksmo','kcic',#
 
+#'kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kral','kl35','kajo'
+
+
 #russian river
 #kuki = Ukiah
+#ksts = santa rosa
+#k069 = petaluma
+#kapc = Napa County
 
 #yuba feather
 #kmvy = Yuba city
 #kove = oroville
+#kgoo = nevada county
+#ko05 = rogers field airport (lake alamour): no precip data
+#ktrk = lake tahoe
+#kblu = emigrant pass (Blue Canyon)
 
 #santa ana
-#kcno = chino
-station_name_list = ["klax"]#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+#kcno = Chino
+#klgb = Long Beach
+#kral = Riverside
+#kl35 = Big Bear
+#kajo = Corona
+
+station_name_list = ['klgb']#['kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kral','kl35','kajo']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 
 
 AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
@@ -57,11 +90,11 @@ AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_C
 
 var = 'precip_accum_one_hour'
 unit = 'precip|mm'
-plot_full_record = True
+plot_full_record = False
 output_5_perc_data = 'D:\\PSU Thesis\\data\\precip_threshold_dates\\'
 
 for i in station_name_list:
-
+    print(i)
     station_name = i
     args_por = {
         'obtimezone':'UTC',
@@ -79,10 +112,11 @@ for i in station_name_list:
     if data_availability_check(station_name,token,var):
         por_start = responseDict_por['STATION'][0]['PERIOD_OF_RECORD']['start']
         por_end = responseDict_por['STATION'][0]['PERIOD_OF_RECORD']['end']
-        
+        s = datetime.strptime(por_start[0:10],"%Y-%m-%d")
+        e = datetime.strptime(por_end[0:10],"%Y-%m-%d")
         por_start_fmt = datetime.strftime(datetime.strptime(por_start[0:10],"%Y-%m-%d"),"%Y%m%d%H%S")
         por_end_fmt = datetime.strftime(datetime.strptime(por_end[0:10],"%Y-%m-%d"),"%Y%m%d%H%S")
-        
+        print(e.year-s.year)
         args = {
             'start':por_start_fmt,
             'end':por_end_fmt,
@@ -112,35 +146,56 @@ for i in station_name_list:
         # resample to only the hourly observations. For inter-hourly observations, the mean of these values is taken
         station_data_hourly = station_data_out.resample('60min').mean()
         station_data_hourly.to_csv('hourly_rainfalls_'+station_name+'.csv')
+        station_data_hourly[station_data_hourly.isnull()] = 0
+        
+        s_e_sum = count_and_sum_events(station_data_hourly)
+        
+        sum_events = s_e_sum[2]
+        
+        sum_events_uq_thres = np.quantile(sum_events,0.75)
+        
+        thres_boolean = sum_events >= sum_events_uq_thres
+        
+        uq_start = s_e_sum[0][thres_boolean]
+        uq_end = s_e_sum[1][thres_boolean]
+        sum_events_uq = sum_events[thres_boolean]
         
         #non-zero rainfall reports
         station_data_hourly_nz = station_data_hourly.loc[station_data_hourly > 0]
         station_data_hourly_nnull = station_data_hourly.loc[station_data_hourly.notnull()]
         
         #compute statistics
-        
+        percentile_75 = station_data_hourly.quantile(0.75)
         percentile_95 = station_data_hourly.quantile(0.95)
         percentile_99 = station_data_hourly.quantile(0.99)
         
+        percentile_75_nz = station_data_hourly_nz.quantile(0.75)
         percentile_95_nz = station_data_hourly_nz.quantile(0.95)
         percentile_99_nz = station_data_hourly_nz.quantile(0.99)
         
         
         threshold_exceedance_points_95_nz = station_data_hourly.loc[station_data_hourly >= percentile_95_nz]
         
+        threshold_exceedance_points_75_nz = station_data_hourly.loc[station_data_hourly >= percentile_75_nz]
+        
         thres_to_plot = threshold_exceedance_points_95_nz.groupby([threshold_exceedance_points_95_nz.index.year, 
                                                                  threshold_exceedance_points_95_nz.index.month,
                                                                  threshold_exceedance_points_95_nz.index.day]).count()
+        thres_to_plot_75 = threshold_exceedance_points_75_nz.groupby([threshold_exceedance_points_75_nz.index.year, 
+                                                                 threshold_exceedance_points_75_nz.index.month,
+                                                                 threshold_exceedance_points_75_nz.index.day]).count()
+        thres_to_plot_75[thres_to_plot_75>1]
         
         
-        
+        thres_to_plot_75[thres_to_plot_75>1].to_csv('precip_nonzero_hourly.csv')
+        threshold_exceedance_points_75_nz.to_csv(station_name + ' 75th_percentile.csv')
         #plotting for slide
         
         fig,ax = plt.subplots(figsize=(40, 20))
         thres_to_plot.plot(kind="bar")
         ax.set_xticks(np.arange(1,len(thres_to_plot),1))
         ax.set_xticks(np.arange(1,len(thres_to_plot),5))
-        fig.suptitle('# of Rainfall Events per day at KLAX with Hourly Precipitation Rate above 95th Percentile', fontsize=60)
+        fig.suptitle('# of Rainfall Events per day at '+station_name.upper() +' with Hourly Precipitation Rate above 95th Percentile', fontsize=60)
         plt.ylabel('Precipiation (mm)', fontsize=50)
         plt.xlabel('Date', fontsize=50)
         plt.xticks(fontsize=20,rotation=45)
@@ -153,7 +208,7 @@ for i in station_name_list:
         ax1.plot(station_data_hourly_nz.index.date,station_data_hourly_nz)
         #ax1.set_xticks(np.arange(1,len(thres_to_plot),1))
         #ax1.set_xticks(np.arange(1,len(thres_to_plot),5))
-        fig1.suptitle('Hourly Precipiation at KLAX', fontsize=60)
+        fig1.suptitle('Hourly Precipiation at '+station_name.upper(), fontsize=60)
         plt.ylabel('Precipiation (mm)', fontsize=50)
         plt.xlabel('Date', fontsize=50)
         plt.xticks(fontsize=30,rotation=45)
@@ -248,7 +303,7 @@ for i in station_name_list:
         ax3.legend(loc="upper left",fontsize=70)
         #ax3.set_xticks(np.arange(1,len(cumsum_date),1))
         #ax3.set_xticks(np.arange(1,len(cumsum_date),10))
-        fig3.savefig(station_name + "_"+args['vars'] + '_cumsum.png')
+        #fig3.savefig(station_name + "_"+args['vars'] + '_cumsum.png')
         #  #cum_sum_precip_t.to_csv('test.csv')
         # # station_data_out.to_csv('test2.csv')
         print(station_name)
