@@ -2,7 +2,7 @@ import urllib
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
-import datetime
+import datetime  as dtetme
 from datetime import datetime
 import scipy.io
 import numpy as np
@@ -18,20 +18,17 @@ def count_and_sum_events(time_series):
     event_start = []
     event_end = []
     event_acum = []
-    for i in range(1,len(time_series)):
+    for i in np.arange(0,len(time_series)-1):
         if time_series[i] != 0 and np.all(time_series[i-24:i] == 0):
             event_start.append(time_series.index[i])
             start_i = i
         if time_series[i] != 0 and np.all(time_series[i+1:i+25] == 0):
             event_end.append(time_series.index[i])
             end_i = i
+            event_total = np.sum(time_series[start_i:end_i+1])
             event_acum.append(np.sum(time_series[start_i:end_i+1]))
             
-            
     return(np.array([event_start,event_end,event_acum]))
-
-            
-    return np.vectorize(lambda x: x != 0 and np.all(time_series[x-24:x+1] != 0))(np.arange(24, len(time_series)))
 
 #open AR time series
 with open('D:\\PSU Thesis\\data\\AR_California_Landfall.pickle', 'rb') as data:
@@ -81,7 +78,7 @@ def data_availability_check(station_name,token,var):
 #kl35 = Big Bear
 #kajo = Corona
 
-station_name_list = ['klgb']#['kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kral','kl35','kajo']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+station_name_list = ['kral']#['kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kral','kl35','kajo']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 
 
 AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
@@ -92,6 +89,10 @@ var = 'precip_accum_one_hour'
 unit = 'precip|mm'
 plot_full_record = False
 output_5_perc_data = 'D:\\PSU Thesis\\data\\precip_threshold_dates\\'
+
+#define cumsum dates
+start_date = dtetme.datetime(2019,5,22,20)
+end_date = dtetme.datetime(2019,5,23,0)
 
 for i in station_name_list:
     print(i)
@@ -160,6 +161,23 @@ for i in station_name_list:
         uq_end = s_e_sum[1][thres_boolean]
         sum_events_uq = sum_events[thres_boolean]
         
+        time_spans = []
+        for i in np.arange(0,len(sum_events_uq)-1):
+            time_spans.append({'start':uq_start[i],'end':uq_end[i],'event_total':sum_events_uq[i]})
+        
+        event_id = []
+        for r in time_spans:
+            event_percentage = 100 * station_data_hourly[r['start']:r['end']]/r['event_total']
+            event_id.append({'start':r['start'],'end':r['end'],'event_perc':event_percentage})
+            
+            
+        
+        
+
+            
+        
+
+        
         #non-zero rainfall reports
         station_data_hourly_nz = station_data_hourly.loc[station_data_hourly > 0]
         station_data_hourly_nnull = station_data_hourly.loc[station_data_hourly.notnull()]
@@ -198,21 +216,23 @@ for i in station_name_list:
         fig.suptitle('# of Rainfall Events per day at '+station_name.upper() +' with Hourly Precipitation Rate above 95th Percentile', fontsize=60)
         plt.ylabel('Precipiation (mm)', fontsize=50)
         plt.xlabel('Date', fontsize=50)
-        plt.xticks(fontsize=20,rotation=45)
-        plt.yticks(fontsize=20)
+        plt.xticks(fontsize=40,rotation=45)
+        plt.yticks(fontsize=40)
         date_form = DateFormatter("%m-%d-%Y")
+        ax.grid()
         ax.xaxis.set_major_formatter(date_form)
         fig.savefig(station_name + "_"+args['vars'] + '_hist.png')
         
         fig1,ax1 = plt.subplots(figsize=(40, 25))
-        ax1.plot(station_data_hourly_nz.index.date,station_data_hourly_nz)
+        ax1.plot(station_data_hourly.index.date,station_data_hourly)
         #ax1.set_xticks(np.arange(1,len(thres_to_plot),1))
         #ax1.set_xticks(np.arange(1,len(thres_to_plot),5))
-        fig1.suptitle('Hourly Precipiation at '+station_name.upper(), fontsize=60)
+        fig1.suptitle('Hourly Precipiation at Riverside, CA ('+station_name.upper()+ ')', fontsize=60)
         plt.ylabel('Precipiation (mm)', fontsize=50)
         plt.xlabel('Date', fontsize=50)
         plt.xticks(fontsize=30,rotation=45)
         plt.yticks(fontsize=30)
+        ax1.grid()
         date_form = DateFormatter("%m-%d-%Y")
         ax1.xaxis.set_major_formatter(date_form)
         fig1.savefig(station_name + "_"+args['vars'] + '_line.png')
@@ -273,27 +293,20 @@ for i in station_name_list:
         if(plot_full_record):
             date_filter_cumsum = merged_cumsum
         else: 
-            #define min and max date for range
-            minDate = pd.to_datetime("2001-01-10")
-            maxDate = pd.to_datetime("2001-01-11")
-            date_filter_cumsum = merged_cumsum.loc[((merged_cumsum["Date"].dt.month >= minDate.month) & (merged_cumsum["Date"].dt.month <= maxDate.month))
-                                                       & ((merged_cumsum["Date"].dt.day >= minDate.day) & (merged_cumsum["Date"].dt.day <= maxDate.day))
-                                                       & ((merged_cumsum["Date"].dt.year >= minDate.year) & (merged_cumsum["Date"].dt.year <= maxDate.year)) ]
+            date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
             
         
         fig3,ax3 = plt.subplots(figsize=(100, 60))
         ax3.grid()
         
         
-        cumsum_date = date_filter_cumsum["Date"]
-        cumsum_precip_value  = date_filter_cumsum["precip_mm"]
-        
-        Yuba_Russian = date_filter_cumsum.loc[date_filter_cumsum.Yuba_Russian == True]
-        Santa_Ana = date_filter_cumsum.loc[date_filter_cumsum.Santa_Ana == True]
+        cumsum_date = date_filter_cumsum.index
+        cumsum_precip_value  = date_filter_cumsum
+  
         
         #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
         #t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-        ax3.plot(cumsum_date, cumsum_precip_value,color="red",label="unaffiliated")
+        ax3.plot(cumsum_date, date_filter_cumsum,color="red")
         #ax3.plot(Yuba_Russian.Date,Yuba_Russian.precip_mm,color="green",label="Yuba Feather/Russian River")
         #ax3.plot(Santa_Ana.Date,Santa_Ana.precip_mm,color="blue",label="Santa Ana")
         #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")

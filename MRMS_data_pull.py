@@ -17,15 +17,17 @@ import os
 import urllib
 import re
 import numpy as np
-from mpl_toolkits.basemap import Basemap
+import cartopy.crs as ccrs
 import xarray as xr
-from matplotlib.colors import Normalize
-from metpy.plots import ctables
+
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
 
-
-start_date = dtetme.datetime(2019,2,4,12)
-end_date = dtetme.datetime(2019,2,4,19)
+start_date = dtetme.datetime(2019,1,12,13)
+end_date = dtetme.datetime(2019,1,12,13)
 
 outdir = ""
 
@@ -58,8 +60,8 @@ bound_sa = True
 #max_lat = 45
 
 if (bound_ca):
-    min_lon = 238
-    max_lon = 243
+    min_lon = 245
+    max_lon = 250
     min_lat = 33
     max_lat = 35
 elif(bound_yfrr):
@@ -81,8 +83,8 @@ else:
 
 
 
-file_var = 'PrecipRate_00' #PrecipRate_00, GaugeCorr_QPE_01H_00
-file_var2 = 'PrecipRate' #GaugeCorr_QPE_01H,PrecipRate
+file_var = 'GaugeCorr_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
+file_var2 = 'GaugeCorr_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
 
 for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
     month = str(dt.month).zfill(2)
@@ -110,47 +112,110 @@ for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         
     print(temp_file_path_name)
         
+     
+        
+        # draw filled contours.
+    #clevs = [0, 1, 2.5, 5, 7.5, 10,10.5,11.5,12.5,13.5,14.5, 15,15.5,16.5,17.5,18.5, 20,20.5,21,21.5,25]
+    clevs = [0, 1, 2.5, 5, 7.5, 10, 15, 20, 30, 40,
+          50, 70, 100, 150, 200, 250, 300, 400, 500, 600, 750]
+    # In future MetPy
+    # norm, cmap = ctables.registry.get_with_boundaries('precipitation', clevs)
+    cmap_data = [(1.0, 1.0, 1.0),
+                 (0.3137255012989044, 0.8156862854957581, 0.8156862854957581),
+                 (0.0, 1.0, 1.0),
+                 (0.0, 0.8784313797950745, 0.501960813999176),
+                 (0.0, 0.7529411911964417, 0.0),
+                 (0.501960813999176, 0.8784313797950745, 0.0),
+                 (1.0, 1.0, 0.0),
+                 (1.0, 0.6274510025978088, 0.0),
+                 (1.0, 0.0, 0.0),
+                 (1.0, 0.125490203499794, 0.501960813999176),
+                 (0.9411764740943909, 0.250980406999588, 1.0),
+                 (0.501960813999176, 0.125490203499794, 1.0),
+                 (0.250980406999588, 0.250980406999588, 1.0),
+                 (0.125490203499794, 0.125490203499794, 0.501960813999176),
+                 (0.125490203499794, 0.125490203499794, 0.125490203499794),
+                 (0.501960813999176, 0.501960813999176, 0.501960813999176),
+                 (0.8784313797950745, 0.8784313797950745, 0.8784313797950745),
+                 (0.9333333373069763, 0.8313725590705872, 0.7372549176216125),
+                 (0.8549019694328308, 0.6509804129600525, 0.47058823704719543),
+                 (0.6274510025978088, 0.42352941632270813, 0.23529411852359772),
+                 (0.4000000059604645, 0.20000000298023224, 0.0)]
+    cmap = mcolors.ListedColormap(cmap_data, 'precipitation')
+    norm = mcolors.BoundaryNorm(clevs, cmap.N) 
         
     grbs = xr.open_dataset(temp_file_path_name,engine='cfgrib')
     # grt=grbs[1]
     # value = grt.values
-    lat_min_ind = np.where(np.array(grbs.latitude) ==np.array(grbs.latitude.min()))[0][0]
-    lat_max_ind =  np.where(np.array(grbs.latitude) ==np.array(grbs.latitude.max()))[0][0]
-    lon_min_ind = np.where(np.array(grbs.longitude) ==np.array(grbs.longitude.min()))[0][0]
-    lon_max_ind = np.where(np.array(grbs.longitude) ==np.array(grbs.longitude.max()))[0][0]
-    ca_values = grbs.unknown[lat_max_ind:lat_min_ind+1,lon_min_ind:lon_max_ind+1]
+    
+    lat_ind = np.where((np.array(grbs.latitude) >=np.array(min_lat)) & (np.array(grbs.latitude) <=np.array(max_lat)))[0]
+    #lon_min_ind = np.where(np.array(grbs.longitude) >=np.array(min_lon))[0]
+    lon_ind = np.where((np.array(grbs.longitude) >=np.array(min_lon)) & (np.array(grbs.longitude) <=np.array(max_lon)))[0]
+    ca_values = grbs.unknown[lat_ind,lon_ind]
     #     #---Convert latitude/longitude 1D arrays to 2D.
-    lat = grbs.latitude
-    lon = grbs.longitude
+    lat = grbs.latitude[lat_ind]
+    lon = grbs.longitude[lon_ind]
     lon2d, lat2d = np.meshgrid(lon,lat)
     
     
-    fig = plt.figure(figsize=(8,8))
-    ax  = fig.add_axes([0.1,0.1,0.8,0.9])
-
-    # Define and plot the meridians and parallels
-    min_lat = min_lat
-    max_lat = max_lat
-    min_lon = min_lon
-    max_lon = max_lon
     
+    fig = plt.figure(figsize=(12,7))
 
-    # Create the basemap object
-    bm = Basemap(projection="cyl",
-                  llcrnrlat=min_lat-1,
-                  urcrnrlat=max_lat+1,
-                  llcrnrlon=min_lon-1,
-                  urcrnrlon=max_lon+1,
-                  resolution='l')
+    # this declares a recentered projection for Pacific areas
+    usemap_proj = ccrs.PlateCarree(central_longitude=180)
+    usemap_proj._threshold /= 20.  # to make greatcircle smooth
 
-    bm.shadedrelief() 
-    bm.drawcoastlines()
-    bm.drawstates()
-    bm.drawcountries()
-    cbartiks = np.arange(-3,25,3)
-    cf  = bm.contourf(lon2d,lat2d,ca_values)
-    cb  = bm.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
-    #fig.savefig('NCFR1_PRECIP_'+str(dt.year)+str(dt.month)+str(dt.day)+str(hour)+'.png')
+    ax = plt.axes(projection=usemap_proj)
+    # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
+    ax.set_extent([min_lon, max_lon, min_lat, max_lat], crs=ccrs.PlateCarree())
+
+    geodetic = ccrs.Geodetic()
+    plate_carree = ccrs.PlateCarree(central_longitude=180)
+
+
+
+    ax.add_feature(cfeature.LAND, color='lightgray')
+    ax.add_feature(cfeature.OCEAN)
+    ax.add_feature(cfeature.COASTLINE)
+    ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=2)
+    ax.add_feature(cfeature.STATES, linestyle=':', zorder=2)
+    # plot grid lines
+    ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+    
+    cm = ax.contourf(lon2d, lat2d, ca_values, transform=ccrs.PlateCarree(), 
+              cmap=plt.cm.jet, zorder=1)
+    #cf  = ax.contourf(lon2d,lat2d,ca_values)
+    
+    ax.tick_params(axis='both', which='both', labelsize=8, direction='out')
+    norm1 = mcolors.Normalize(vmin=0, vmax=1)
+    # colorbar and labels
+    cb = plt.colorbar(cm,orientation="horizontal",norm=norm)
+    ax.set_title('QPE');
+    
+    # Add a label to the color bar
+    cb.set_label('mm')
+    
+    #cb  = ax.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
+    
+    plt.show()
+    
+ 
+    # # Create the basemap object
+    # bm = Basemap(projection="cyl",
+    #               llcrnrlat=min_lat-1,
+    #               urcrnrlat=max_lat+1,
+    #               llcrnrlon=min_lon-1,
+    #               urcrnrlon=max_lon+1,
+    #               resolution='l')
+
+    # bm.shadedrelief() 
+    # bm.drawcoastlines()
+    # bm.drawstates()
+    # bm.drawcountries()
+    # cbartiks = np.arange(-3,25,3)
+    # cf  = bm.contourf(lon2d,lat2d,ca_values)
+    # cb  = bm.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
+    fig.savefig('NCFR1_QPE_'+str(dt.year)+str(dt.month)+str(dt.day)+str(hour)+'.png')
     # fig, ax = plt.subplots(figsize=(8,8))
     # im = ax.imshow(ca_values, extent=(min_lon,max_lon, min_lat, max_lat))
     # ax.set_title(grt.name)
