@@ -9,6 +9,8 @@ import numpy as np
 import pickle
 from matplotlib.dates import DayLocator, DateFormatter
 
+import MRMS_data_pull as MRMS
+
 # stage four quanitiative precipitation (hourly radar product)
 # find the ARs that are colocated
 # Specify request parameters (as strings)
@@ -45,6 +47,13 @@ AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude","year","month","da
 AR_pd["Yuba-Feather"] = (AR_pd.latitude >= 37) & (AR_pd.latitude <= 40)
 AR_pd["Santa Ana"] = (AR_pd.latitude >= 32) & (AR_pd.latitude <= 37)
 
+
+def myround(x, prec=2, base=.5):
+  return round(base * round(float(x)/base),prec)
+
+#def mergedata(AR_TS,event):
+    #merge AR with event by date and AR landfall lat
+
 def data_availability_check(station_name,token,var):
     if responseDict_por['SUMMARY']['RESPONSE_MESSAGE'] == 'OK':
         return(True)
@@ -78,7 +87,7 @@ def data_availability_check(station_name,token,var):
 #kl35 = Big Bear
 #kajo = Corona
 
-station_name_list = ['kral']#['kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kral','kl35','kajo']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+station_name_list = ['kral']#['kcic','kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kral','kl35','kajo','kcic']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 
 
 AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
@@ -91,8 +100,10 @@ plot_full_record = False
 output_5_perc_data = 'D:\\PSU Thesis\\data\\precip_threshold_dates\\'
 
 #define cumsum dates
-start_date = dtetme.datetime(2019,5,22,20)
-end_date = dtetme.datetime(2019,5,23,0)
+start_date = dtetme.datetime(2019,1,12,9)
+end_date = dtetme.datetime(2019,1,13,1)
+
+
 
 for i in station_name_list:
     print(i)
@@ -113,6 +124,8 @@ for i in station_name_list:
     if data_availability_check(station_name,token,var):
         por_start = responseDict_por['STATION'][0]['PERIOD_OF_RECORD']['start']
         por_end = responseDict_por['STATION'][0]['PERIOD_OF_RECORD']['end']
+        station_lon = float(responseDict_por['STATION'][0]['LONGITUDE'])
+        station_lat = float(responseDict_por['STATION'][0]['LATITUDE'])
         s = datetime.strptime(por_start[0:10],"%Y-%m-%d")
         e = datetime.strptime(por_end[0:10],"%Y-%m-%d")
         por_start_fmt = datetime.strftime(datetime.strptime(por_start[0:10],"%Y-%m-%d"),"%Y%m%d%H%S")
@@ -320,6 +333,8 @@ for i in station_name_list:
         #  #cum_sum_precip_t.to_csv('test.csv')
         # # station_data_out.to_csv('test2.csv')
         print(station_name)
+        
+        MRMS.map_event(start_date, end_date, station_lon, station_lat, 'sa')
     else:
         print("No data available for " + station_name)
         

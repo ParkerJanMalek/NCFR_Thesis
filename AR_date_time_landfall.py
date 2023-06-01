@@ -11,10 +11,38 @@ import scipy.io as sc
 import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
-import geopandas
 import os
 from shapely.geometry import Point
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import cartopy.io.shapereader as shpreader
+import cartopy
+#import geopandas as gpd
 
+bound_ca = True
+bound_yfrr = False
+bound_sa = False
+
+if (bound_ca):
+    min_lon = 233
+    max_lon = 247
+    min_lat = 32
+    max_lat = 43
+elif(bound_yfrr):
+    min_lon = 238
+    max_lon = 243
+    min_lat = 35
+    max_lat = 40
+elif(bound_sa):
+    min_lon = 238
+    max_lon = 243
+    min_lat = 33
+    max_lat = 35
+else:
+   min_lon = 230.005
+   max_lon = 299.994998
+   min_lat = 20.005
+   max_lat = 54.995 
 
 # fds = xr.open_dataset("D:/PSU Thesis/data/globalARcatalog_MERRA2_1980-2020_v3.1.nc",chunks='auto')
 
@@ -78,6 +106,10 @@ saved_AR_path = 'D:\\PSU Thesis\\data\\AR_California_Landfall.pickle'
 #open AR time series
 with open(saved_AR_path, 'rb') as data:
     date_AR = pickle.load(data)
+    
+def merge_AR(AR_cat,event_list):
+    
+    
 
 # if(not os.path.exists(saved_AR_path)):
 #     # loop through landfall coordinates, pick ones that occur within range of bounding box described above
@@ -121,21 +153,65 @@ AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude"])
 # world = geopandas.read_file(geopandas.datasets.get_path('naturalearth_lowres'))
 
 
-california = geopandas.read_file('D:\\PSU Thesis\\data\\CA_State_TIGER2016.shp')
-california =  california.to_crs(4326)
-fig,ax = plt.subplots(figsize = (30,30))
-geometry = [Point(xy) for xy in zip(AR_pd.longitude,AR_pd.latitude)]
-geo_df = geopandas.GeoDataFrame(geometry = geometry)
-california.crs = "epsg:4326"
-geo_df.crs = "epsg:4326"
-california.plot(ax=ax)
-g = geo_df.plot(ax = ax, markersize = 800, color = 'red',marker = '*',label="AR Landfall Locations")
-ax.legend(loc="upper right",fontsize=40)
-ax.set_title("California AR Landfall Locations",fontsize=40)
-ax.set_xlabel('Latitude',fontsize=40)
-ax.set_ylabel('Longitude',fontsize=40)
-ax.tick_params(axis='both', which='major', labelsize=40)
-plt.show()
-#fig.savefig('D:\\PSU Thesis\\data\\California_AR_Landfall.png')
+fig = plt.figure(figsize=(12,7))
+
+# this declares a recentered projection for Pacific areas
+usemap_proj = ccrs.PlateCarree(central_longitude=180)
+usemap_proj._threshold /= 20.  # to make greatcircle smooth
+
+ax = plt.axes(projection=usemap_proj)
+# set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
+ax.set_extent([min_lon, max_lon, min_lat, max_lat], crs=ccrs.PlateCarree())
+
+geodetic = ccrs.Geodetic()
+plate_carree = ccrs.PlateCarree(central_longitude=180)
+
+
+
+ax.add_feature(cfeature.LAND, color='lightgray')
+ax.add_feature(cfeature.OCEAN)
+ax.add_feature(cfeature.COASTLINE)
+ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=2)
+ax.add_feature(cfeature.STATES, linestyle=':', zorder=2)
+
+reader = shpreader.Reader("D:\\PSU Thesis\\data\\test.shp")
+# shapefile = gpd.read_file("D:\\PSU Thesis\\data\\test.shp")
+# desired_crs = ccrs.PlateCarree()
+# reprojected_shapefile = shapefile.to_crs(desired_crs.proj4_init)
+
+# RR = [w for w in reader.records() if w.attributes["Name"]=='Russian'][0]
+# SA = [w for w in reader.records() if w.attributes["Name"]=='Santa Ana'][0]
+
+
+# shape_featureRR = cfeature.ShapelyFeature([RR.geometry], crs=ccrs.PlateCarree(), facecolor="lime", edgecolor='black', lw=2)
+# shape_featureSA = cfeature.ShapelyFeature([SA.geometry], crs=ccrs.PlateCarree(), facecolor="lime", edgecolor='black', lw=2)
+# ax.add_feature(shape_featureRR,zorder=3)
+# ax.add_feature(shape_featureSA,zorder=3)
+# plot grid lines
+ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+
+
+
+#california = geopandas.read_file('D:\\PSU Thesis\\data\\CA_State_TIGER2016.shp')
+#california =  california.to_crs(4326)
+#fig,ax = plt.subplots(figsize = (30,30))
+
+
+#geometry = [Point(xy) for xy in zip(AR_pd.longitude,AR_pd.latitude)]
+#ax.plot(lon_jap, lat_jap, markersize=10, marker='o', color='red', transform=ccrs.PlateCarree())
+ax.plot(AR_pd['longitude'],AR_pd['latitude'],'o',color='red',transform=ccrs.PlateCarree())
+ax.set_title('AR Centroid Landfall California Locations');
+#geo_df = AR_pd.geometry.centroid
+# california.crs = "epsg:4326"
+# geo_df.crs = "epsg:4326"
+# california.plot(ax=ax)
+# g = geo_df.plot(ax = ax, markersize = 800, color = 'red',marker = '*',label="AR Landfall Locations")
+# ax.legend(loc="upper right",fontsize=40)
+# ax.set_title("California AR Landfall Locations",fontsize=40)
+# ax.set_xlabel('Latitude',fontsize=40)
+# ax.set_ylabel('Longitude',fontsize=40)
+# ax.tick_params(axis='both', which='major', labelsize=40)
+# plt.show()
+fig.savefig('D:\\PSU Thesis\\data\\California_AR_Landfall.png')
 
 
