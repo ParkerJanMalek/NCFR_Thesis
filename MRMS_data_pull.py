@@ -29,18 +29,7 @@ from matplotlib.colors import Normalize
 
 def map_event(start_date,end_date,station_lon,station_lat,bound):
 
-    start_date = dtetme.datetime(2019,1,12,9)
-    end_date = dtetme.datetime(2019,1,13,1)
-    
-    station_lon = -117.44511
-    station_lat = 33.95189
-    
     outdir = ""
-    
-    if bound == "ca":
-        bound_ca = False
-    bound_yfrr = False
-    bound_sa = True
     #bounding box California
     #min_lon = 230
     #max_lon = 250
