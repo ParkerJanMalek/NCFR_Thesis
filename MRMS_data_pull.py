@@ -29,7 +29,7 @@ from matplotlib.colors import Normalize
 
 def map_event(start_date,end_date,station_lon,station_lat,bound):
 
-    outdir = ""
+    
     #bounding box California
     #min_lon = 230
     #max_lon = 250
@@ -82,6 +82,8 @@ def map_event(start_date,end_date,station_lon,station_lat,bound):
     file_var = 'GaugeCorr_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
     file_var2 = 'GaugeCorr_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
     
+    outdir = 'D:\\PSU Thesis\\data\\'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+    os.mkdir(outdir)
     for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         month = str(dt.month).zfill(2)
         day = str(dt.day).zfill(2)
@@ -93,7 +95,7 @@ def map_event(start_date,end_date,station_lon,station_lat,bound):
             os.remove(filename) 
             
             
-        fileupload= wget.download(url, out=outdir)
+        fileupload= wget.download(url, out="")
         
         with gzip.open(fileupload, 'rb') as f:
             uncompressed_data = f.read()
@@ -225,7 +227,7 @@ def map_event(start_date,end_date,station_lon,station_lat,bound):
         # cbartiks = np.arange(-3,25,3)
         # cf  = bm.contourf(lon2d,lat2d,ca_values)
         # cb  = bm.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
-        fig.savefig('QPEt_'+str(dt.year)+str(dt.month)+str(dt.day)+str(hour)+'.png')
+        fig.savefig(outdir+'QPE_'+str(dt.year)+str(dt.month)+str(dt.day)+str(hour)+'.png')
         # fig, ax = plt.subplots(figsize=(8,8))
         # im = ax.imshow(ca_values, extent=(min_lon,max_lon, min_lat, max_lat))
         # ax.set_title(grt.name)

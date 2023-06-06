@@ -207,8 +207,8 @@ for i in station_name_list:
             AR_DF = np.unique(pd.to_datetime(AR_intersect['date']))
             event_id.append({'start':r['start'],'end':r['end'],'event_rainfall':station_data_hourly[r['start']:r['end']],'event_perc':event_percentage,'associated_AR':any(any(row) for row in dates_of_event.isin(AR_DF).values)})
             
-            
-        events_with_AR = [item for item in event_id if item['associated_AR'] ==True]
+        #limit to MRMS data    
+        events_with_AR = [item for item in event_id if item['associated_AR'] ==True and item['start'].year >= 2016]
             #station_data_hourly[r['start']:r['end']]
             
             
@@ -361,8 +361,9 @@ for i in station_name_list:
         #  #cum_sum_precip_t.to_csv('test.csv')
         # # station_data_out.to_csv('test2.csv')
         print(station_name)
-        
-        #MRMS.map_event(start_date, end_date, station_lon, station_lat, 'sa')
+        for i in events_with_AR:
+            MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat, 'sa')
+            
     else:
         print("No data available for " + station_name)
         
