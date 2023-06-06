@@ -32,22 +32,22 @@ def count_and_sum_events(time_series):
             
     return(np.array([event_start,event_end,event_acum]))
 
+def find_nearest_value(target, values):
+    nearest = None
+    min_difference = float('inf')
+
+    for value in values:
+        difference = abs(value - target)
+        if difference < min_difference:
+            min_difference = difference
+            nearest = value
+
+    return nearest
+
 #open AR time series
 with open('D:\\PSU Thesis\\data\\AR_California_Landfall.pickle', 'rb') as data:
     AR_TS = pickle.load(data)
-
-AR_point = []
-
-for i in range(0,len(AR_TS)):
-    latlon_time = [AR_TS[i][0],AR_TS[i][1]-360,AR_TS[i][2].astype(object).year,AR_TS[i][2].astype(object).month,AR_TS[i][2].astype(object).day,AR_TS[i][2].astype(object).hour]
-    AR_point.append(latlon_time)
-AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude","year","month","day","hour"])
-
-#define boundaries for reserviors
-AR_pd["Yuba-Feather"] = (AR_pd.latitude >= 37) & (AR_pd.latitude <= 40)
-AR_pd["Santa Ana"] = (AR_pd.latitude >= 32) & (AR_pd.latitude <= 37)
-
-
+    
 def myround(x, prec=2, base=.5):
   return round(base * round(float(x)/base),prec)
 
@@ -59,6 +59,19 @@ def data_availability_check(station_name,token,var):
         return(True)
     else:
         return(False)
+
+AR_point = []
+
+for i in range(0,len(AR_TS)):
+    latlon_time = [AR_TS[i][0],AR_TS[i][1]-360,AR_TS[i][2].astype(object).year,AR_TS[i][2].astype(object).month,AR_TS[i][2].astype(object).day,AR_TS[i][2].astype(object).hour]
+    AR_point.append(latlon_time)
+AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude","year","month","day","hour"])
+
+#define boundaries for reserviors
+AR_pd["Yuba-Feather"] = (AR_pd.latitude >= 37) & (AR_pd.latitude <= 40)
+AR_pd["Santa Ana"] = (AR_pd.latitude >= 32) & (AR_pd.latitude <= 37)
+AR_pd["Russian River"] = (AR_pd.latitude >= 38) & (AR_pd.latitude <= 40)
+
     
     
 #['ksfo','klax','krdd','ksmo','kcic','kpdx']'ksfo','klax','krdd','ksmo','kcic',#
@@ -126,6 +139,15 @@ for i in station_name_list:
         por_end = responseDict_por['STATION'][0]['PERIOD_OF_RECORD']['end']
         station_lon = float(responseDict_por['STATION'][0]['LONGITUDE'])
         station_lat = float(responseDict_por['STATION'][0]['LATITUDE'])
+        
+        #find AR lat
+        near_AR_lat = find_nearest_value(station_lat,AR_pd['latitude'])
+        near_AR_lat_p1 = near_AR_lat+0.5
+        near_AR_lat_m1 = near_AR_lat-0.5
+        
+        AR_intersect = AR_pd.loc[(AR_pd['latitude']==near_AR_lat) | (AR_pd['latitude']==near_AR_lat_p1) | (AR_pd['latitude']==near_AR_lat_m1),:]
+        AR_intersect['date'] = pd.to_datetime(AR_intersect[['year','month','day']])
+        
         s = datetime.strptime(por_start[0:10],"%Y-%m-%d")
         e = datetime.strptime(por_end[0:10],"%Y-%m-%d")
         por_start_fmt = datetime.strftime(datetime.strptime(por_start[0:10],"%Y-%m-%d"),"%Y%m%d%H%S")
@@ -181,7 +203,13 @@ for i in station_name_list:
         event_id = []
         for r in time_spans:
             event_percentage = 100 * station_data_hourly[r['start']:r['end']]/r['event_total']
-            event_id.append({'start':r['start'],'end':r['end'],'event_perc':event_percentage})
+            dates_of_event = pd.DataFrame(np.unique(pd.to_datetime(station_data_hourly[r['start']:r['end']].index.date)))
+            AR_DF = np.unique(pd.to_datetime(AR_intersect['date']))
+            event_id.append({'start':r['start'],'end':r['end'],'event_rainfall':station_data_hourly[r['start']:r['end']],'event_perc':event_percentage,'associated_AR':any(any(row) for row in dates_of_event.isin(AR_DF).values)})
+            
+            
+        events_with_AR = [item for item in event_id if item['associated_AR'] ==True]
+            #station_data_hourly[r['start']:r['end']]
             
             
         
@@ -334,7 +362,7 @@ for i in station_name_list:
         # # station_data_out.to_csv('test2.csv')
         print(station_name)
         
-        MRMS.map_event(start_date, end_date, station_lon, station_lat, 'sa')
+        #MRMS.map_event(start_date, end_date, station_lon, station_lat, 'sa')
     else:
         print("No data available for " + station_name)
         
