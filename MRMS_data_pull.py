@@ -26,15 +26,16 @@ import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.colors import Normalize
+import shutil
 
-def map_event(start_date,end_date,station_lon,station_lat,bound):
+def map_event(start_date,end_date,station_lon,station_lat,bound,station_name):
 
     
     #bounding box California
-    #min_lon = 230
-    #max_lon = 250
-    #min_lat = 30
-    #max_lat = 45
+    min_lon = 360+station_lon - 2
+    max_lon = 360+station_lon + 2
+    min_lat = station_lat - 2
+    max_lat = station_lat + 2
     
     
     #bounding box Russia River
@@ -54,27 +55,29 @@ def map_event(start_date,end_date,station_lon,station_lat,bound):
     #max_lon = 243
     #min_lat = 30
     #max_lat = 45
+
     
-    if bound=="ca":
-        min_lon = 245
-        max_lon = 250
-        min_lat = 33
-        max_lat = 35
-    elif bound=="yfrr":
-        min_lon = 238
-        max_lon = 243
-        min_lat = 35
-        max_lat = 40
-    elif bound=="sa":
-        min_lon = 238
-        max_lon = 243
-        min_lat = 33
-        max_lat = 35
-    else:
-       min_lon = 230.005
-       max_lon = 299.994998
-       min_lat = 20.005
-       max_lat = 54.995 
+    
+    # if bound=="ca":
+    #     min_lon = 245
+    #     max_lon = 250
+    #     min_lat = 33
+    #     max_lat = 35
+    # elif bound=="yfrr":
+    #     min_lon = 235
+    #     max_lon = 243
+    #     min_lat = 37
+    #     max_lat = 43
+    # elif bound=="sa":
+    #     min_lon = 238
+    #     max_lon = 243
+    #     min_lat = 33
+    #     max_lat = 35
+    # else:
+    #    min_lon = 230.005
+    #    max_lon = 299.994998
+    #    min_lat = 20.005
+    #    max_lat = 54.995 
        
     
     
@@ -82,8 +85,12 @@ def map_event(start_date,end_date,station_lon,station_lat,bound):
     file_var = 'GaugeCorr_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
     file_var2 = 'GaugeCorr_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
     
-    outdir = 'D:\\PSU Thesis\\data\\'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+    outdir = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+    
+    if os.path.exists(outdir):
+        shutil.rmtree(outdir)
     os.mkdir(outdir)
+    
     for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         month = str(dt.month).zfill(2)
         day = str(dt.day).zfill(2)

@@ -8,6 +8,7 @@ import scipy.io
 import numpy as np
 import pickle
 from matplotlib.dates import DayLocator, DateFormatter
+import shutil
 
 import MRMS_data_pull as MRMS
 
@@ -100,8 +101,10 @@ AR_pd["Russian River"] = (AR_pd.latitude >= 38) & (AR_pd.latitude <= 40)
 #kl35 = Big Bear
 #kajo = Corona
 
-station_name_list = ['kral']#['kcic','kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kral','kl35','kajo','kcic']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+station_name_list = ['kcic','kuki','ksts','kapc','k069','kmvy','kove','kgoo','ko05','ktrk','kblu','kcno','kl35','kajo','kral']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+#station_boundary = ['yfrr','yfrr','yfrr','yfrr']
 
+station_window = {'kcic':'yfrr','kuki':'yfrr','ksts':'yfrr','kapc':'yfrr','k069':'yfrr','kmvy':'yfrr','kove':'yfrr','kgoo':'yfrr','ko05':'yfrr','ktrk':'yfrr','kblu':'yfrr','kcno':'sa','kl35':'sa','kajo':'sa','kral':'sa'}
 
 AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
 # check for highest resolution of precip data 
@@ -120,6 +123,7 @@ end_date = dtetme.datetime(2019,1,13,1)
 
 for i in station_name_list:
     print(i)
+    bound = station_window[i]
     station_name = i
     args_por = {
         'obtimezone':'UTC',
@@ -208,7 +212,8 @@ for i in station_name_list:
             event_id.append({'start':r['start'],'end':r['end'],'event_rainfall':station_data_hourly[r['start']:r['end']],'event_perc':event_percentage,'associated_AR':any(any(row) for row in dates_of_event.isin(AR_DF).values)})
             
         #limit to MRMS data    
-        events_with_AR = [item for item in event_id if item['associated_AR'] ==True and item['start'].year >= 2016]
+       # events_with_AR = [item for item in event_id if item['associated_AR'] ==True and item['start'].year >= 2016]
+        events_with_AR = [item for item in event_id if item['associated_AR'] ==True and (item['start'].year >= 2016) and (any(item['event_perc'] >= 20)) ]
             #station_data_hourly[r['start']:r['end']]
             
             
@@ -362,7 +367,7 @@ for i in station_name_list:
         # # station_data_out.to_csv('test2.csv')
         print(station_name)
         for i in events_with_AR:
-            MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat, 'sa')
+            MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat, bound,station_name)
             
     else:
         print("No data available for " + station_name)
