@@ -28,7 +28,7 @@ import matplotlib.colors as mcolors
 from matplotlib.colors import Normalize
 import shutil
 
-def map_event(start_date,end_date,station_lon,station_lat,bound,station_name):
+def map_event(start_date,end_date,station_lon,station_lat,station_name):
 
     
     #bounding box California
@@ -82,8 +82,8 @@ def map_event(start_date,end_date,station_lon,station_lat,bound,station_name):
     
     
     
-    file_var = 'GaugeCorr_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
-    file_var2 = 'GaugeCorr_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
+    file_var = 'RadarOnly_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
+    file_var2 = 'RadarOnly_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
     
     outdir = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
     
@@ -98,6 +98,7 @@ def map_event(start_date,end_date,station_lon,station_lat,bound,station_name):
         
         filename = file_var+'.00_'+str(dt.year)+str(month)+str(day)+'-'+str(hour)+'0000.grib2.gz'
         url = 'https://mtarchive.geol.iastate.edu/'+str(dt.year)+'/'+str(month)+'/'+str(day)+'/mrms/ncep/'+file_var2+'/'+filename
+        print(url)
         if os.path.exists(filename):
             os.remove(filename) 
             
@@ -234,7 +235,7 @@ def map_event(start_date,end_date,station_lon,station_lat,bound,station_name):
         # cbartiks = np.arange(-3,25,3)
         # cf  = bm.contourf(lon2d,lat2d,ca_values)
         # cb  = bm.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
-        fig.savefig(outdir+'QPE_'+str(dt.year)+str(dt.month)+str(dt.day)+str(hour)+'.png')
+        fig.savefig(outdir+file_var2+'_'+str(dt.year)+str(dt.month)+str(dt.day)+str(hour)+'.png')
         # fig, ax = plt.subplots(figsize=(8,8))
         # im = ax.imshow(ca_values, extent=(min_lon,max_lon, min_lat, max_lat))
         # ax.set_title(grt.name)
