@@ -22,18 +22,29 @@ def count_and_sum_events(time_series):
     event_start = []
     event_end = []
     event_acum = []
+    event_id = []
     for i in np.arange(0,len(time_series)-1):
-        if time_series[i] != 0 and np.all(time_series[i-24:i] == 0):
+        if time_series[i] != 0 and ((np.all(time_series[i-24:i] == 0) and not time_series[i-24:i].empty) or 
+                                    (i < 24 and np.all(time_series[:i] == 0))):
+           
             event_start.append(time_series.index[i])
             start_i = i
+            j = i
         if time_series[i] != 0 and np.all(time_series[i+1:i+25] == 0):
             event_end.append(time_series.index[i])
             end_i = i
             event_total = np.sum(time_series[start_i:end_i+1])
             event_acum.append(np.sum(time_series[start_i:end_i+1]))
-            
-    
-    return(np.array([event_start,event_end,event_acum]))
+            k = i
+    event_id.append({'start':np.array(event_start),'end':np.array(event_end),'accum':np.array(event_acum)})     
+    # for i in np.arange(0,len(event_id)):
+    #     event= event_id[i]['accum']
+    #     for j in np.arange(0,len(event)):
+    #         #5 days between nonzero rainfall
+    #         if j < len(event) - 5 and (event[j] != 0 and np.all(event[j+1:j+5] == 0) and event[j+6] != 0):
+    #             event_id[i]['multimodal']=True
+                
+    return(event_id)
 
 def find_nearest_value(target, values):
     nearest = None
@@ -103,7 +114,7 @@ AR_pd["Russian River"] = (AR_pd.latitude >= 38) & (AR_pd.latitude <= 40)
 #kl35 = Big Bear
 #kajo = Corona
 #['kcic','kuki','ksts','kapc','k069','kmyv','kove','kgoo',ko05','ktrk','kblu','kcno','kl35','kajo',
-station_name_list =['kcic']#['kral','kuki','ksts','kapc','kcno','kajo']#['kcic','kuki','ksts','kapc','k069','kmyv','kove','kgoo','ko05','ktrk','kblu','kcno','kl35','kajo','kral']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+station_name_list =['kove','kral']#['kove']#['kral','kuki','ksts','kapc','kcno','kajo']#['kcic','kuki','ksts','kapc','k069','kmyv','kove','kgoo','ko05','ktrk','kblu','kcno','kl35','kajo','kral']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 #station_boundary = ['yfrr','yfrr','yfrr','yfrr']
 
 station_window = {'kcic':'yfrr','kuki':'yfrr','ksts':'yfrr','kapc':'yfrr','k069':'yfrr','kmyv':'yfrr','kove':'yfrr','kgoo':'yfrr','ko05':'yfrr','ktrk':'yfrr','kblu':'yfrr','kcno':'sa','kl35':'sa','kajo':'sa','kral':'sa'}
@@ -125,6 +136,7 @@ end_date = dtetme.datetime(2019,1,13,1)
 
 for i in station_name_list:
     print(i)
+    from datetime import datetime
     #bound = station_window[i]
     station_name = i
     args_por = {
@@ -192,17 +204,18 @@ for i in station_name_list:
         
         s_e_sum = count_and_sum_events(station_data_hourly)
         
-        sum_events = s_e_sum[2]
+        sum_events = s_e_sum[0]['accum']
         
-        sum_events_uq_thres = np.quantile(sum_events,0.75)
+        sum_events_uq_thres = np.quantile(sum_events,0.95)
         
         thres_boolean = sum_events >= sum_events_uq_thres
         
-        uq_start = s_e_sum[0][thres_boolean]
-        uq_end = s_e_sum[1][thres_boolean]
+        uq_start = s_e_sum[0]['start'][thres_boolean]
+        uq_end = s_e_sum[0]['end'][thres_boolean]
         sum_events_uq = sum_events[thres_boolean]
         
         time_spans = []
+        
         for i in np.arange(0,len(sum_events_uq)-1):
             time_spans.append({'start':uq_start[i],'end':uq_end[i],'event_total':sum_events_uq[i]})
         
@@ -210,21 +223,33 @@ for i in station_name_list:
         event_total = []
         
         
-        #ts = [time_spans[123]]
         for r in time_spans:
             event_percentage = 100 * station_data_hourly[r['start']:r['end']]/r['event_total']
             dates_of_event = pd.DataFrame(np.unique(pd.to_datetime(station_data_hourly[r['start']:r['end']].index.date)))
             AR_DF = np.unique(pd.to_datetime(AR_intersect['date']))
-            event_id.append({'start':r['start'],'end':r['end'],'event_rainfall':station_data_hourly[r['start']:r['end']],'event_total':r['event_total'] ,'event_perc':event_percentage,'associated_AR':any(any(row) for row in dates_of_event.isin(AR_DF).values)})
+            event_id.append({'start':r['start'],'end':r['end'],'event_rainfall':station_data_hourly[r['start']:r['end']],'event_total':r['event_total'] ,'event_perc':event_percentage,'associated_AR':any(any(row) for row in dates_of_event.isin(AR_DF).values),'multimodal':False})
             event_total.append(r['event_total'])
-        quantile = np.quantile(event_total,0.75)
-        filtered_event_total = [x for x in event_id if x['event_total'] >= 15]
-        events_torun = [item for item in filtered_event_total if (item['start'].year >= 2016) and  (any(item['event_perc'] >= 20)) ] #and (item['start'].year < 2021)
-       # events_torun = event_id
-        #limit to MRMS data    
-       #events_with_AR = [item for item in event_id if item['associated_AR'] ==True and item['start'].year >= 2016]
-       # events_with_AR = [item for item in event_id if item['associated_AR'] ==True and (item['start'].year >= 2016) and (any(item['event_perc'] >= 20)) ]
-            #station_data_hourly[r['start']:r['end']]
+
+        for i in np.arange(0,len(event_id)):
+            event= event_id[i]['event_rainfall']
+            for j in np.arange(0,len(event)):
+                if j < len(event) - 6 and (event[j] != 0 and np.all(event[j+1:j+5] == 0) and event[j+6] != 0):
+                    event_id[i]['multimodal']=True
+
+        filtered_event_total = [x for x in event_id if x['multimodal']]
+        
+        #kuki selected events
+        import datetime
+        if station_name == 'kuki':
+           ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,1,6) or 
+                              x['start'].date() == datetime.date(2019,2,8) or
+                              x['start'].date() == datetime.date(2021,10,20)]
+        elif station_name == 'kral':
+            ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2019,1,14) or 
+                               x['start'].date() == datetime.date(2019,1,14)]
+        elif station_name == 'kove':
+            ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,2,6) or 
+                               x['start'].date() == datetime.date(2016,3,9)]
             
             
         
@@ -265,33 +290,6 @@ for i in station_name_list:
         threshold_exceedance_points_75_nz.to_csv(station_name + ' 75th_percentile.csv')
         #plotting for slide
         
-        fig,ax = plt.subplots(figsize=(40, 20))
-        thres_to_plot.plot(kind="bar")
-        ax.set_xticks(np.arange(1,len(thres_to_plot),1))
-        ax.set_xticks(np.arange(1,len(thres_to_plot),5))
-        fig.suptitle('# of Rainfall Events per day at '+station_name.upper() +' with Hourly Precipitation Rate above 95th Percentile', fontsize=60)
-        plt.ylabel('Precipiation (mm)', fontsize=50)
-        plt.xlabel('Date', fontsize=50)
-        plt.xticks(fontsize=40,rotation=45)
-        plt.yticks(fontsize=40)
-        date_form = DateFormatter("%m-%d-%Y")
-        ax.grid()
-        ax.xaxis.set_major_formatter(date_form)
-        fig.savefig(station_name + "_"+args['vars'] + '_hist.png')
-        
-        fig1,ax1 = plt.subplots(figsize=(40, 25))
-        ax1.plot(station_data_hourly.index.date,station_data_hourly)
-        #ax1.set_xticks(np.arange(1,len(thres_to_plot),1))
-        #ax1.set_xticks(np.arange(1,len(thres_to_plot),5))
-        fig1.suptitle('Hourly Precipiation at Riverside, CA ('+station_name.upper()+ ')', fontsize=60)
-        plt.ylabel('Precipiation (mm)', fontsize=50)
-        plt.xlabel('Date', fontsize=50)
-        plt.xticks(fontsize=30,rotation=45)
-        plt.yticks(fontsize=30)
-        ax1.grid()
-        date_form = DateFormatter("%m-%d-%Y")
-        ax1.xaxis.set_major_formatter(date_form)
-        fig1.savefig(station_name + "_"+args['vars'] + '_line.png')
         
         
         
@@ -346,44 +344,74 @@ for i in station_name_list:
       
         
      #isolate day, plot cumulation
-        if(plot_full_record):
-            date_filter_cumsum = merged_cumsum
-        else: 
-            date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
-            
         
-        fig3,ax3 = plt.subplots(figsize=(100, 60))
-        ax3.grid()
+        file_var2 = 'GaugeCorr_QPE_01H'
+        for i in ts_selected:
+            outdirck = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            #if not os.path.exists(outdirck):
+            MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat,station_name)
+        
+        #kuki
+        #start_date = event_id[92]['start']
+        #end_date = event_id[92]['end']
+        
+        #kove
+        # start_date = event_id[32]['start'] 
+        # end_date = event_id[32]['end'] 
+        # if(plot_full_record):
+        #     date_filter_cumsum = merged_cumsum
+        # else: 
+        #     date_filter = station_data_hourly[start_date:end_date]
+        #     date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
+        # multimodal= 1
+        # for i in filtered_event_total:
+        #     if(plot_full_record):
+        #         date_filter_cumsum = merged_cumsum
+        #     else: 
+        #         date_filter = station_data_hourly[i['start']:i['end']]
+        #         date_filter_cumsum = station_data_hourly[i['start']:i['end']].cumsum()
+        #     fig,ax = plt.subplots(figsize=(40, 20))
+        #     ax.bar(date_filter.index,date_filter,width=0.01)
+        #     #date_filter.plot(kind="bar")
+        #     # ax.set_xticks(np.arange(1,len(date_filter),1))
+        #     # ax.set_xticks(np.arange(1,len(date_filter),5))
+        #     fig.suptitle('Hourly Rainfall at '+station_name.upper() , fontsize=60)
+        #     plt.ylabel('Precipiation (mm)', fontsize=50)
+        #     plt.xlabel('Date', fontsize=50)
+        #     plt.xticks(fontsize=30,rotation=40)
+        #     plt.yticks(fontsize=30)
+        #     ax.grid()
+        #     date_form = DateFormatter("%m-%d-%Y-%H")
+        #     ax.xaxis.set_major_formatter(date_form)
+        #     fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist.png')  
+        #     multimodal = multimodal + 1
+        # fig1,ax1 = plt.subplots(figsize=(40, 25))
+        # ax1.plot(date_filter.index,date_filter)
+        # fig1.suptitle('Hourly Precipiation at '+station_name.upper(), fontsize=60)
+        # plt.ylabel('Precipiation (mm)', fontsize=50)
+        # plt.xlabel('Date', fontsize=50)
+        # plt.xticks(fontsize=30,rotation=45)
+        # plt.yticks(fontsize=30)
+        # ax1.grid()
+        # date_form = DateFormatter("%m-%d-%Y-%H")
+        # ax1.xaxis.set_major_formatter(date_form)
+        # #fig1.savefig(station_name + "_"+args['vars'] + '_line.png')   
+        
+        # fig3,ax3 = plt.subplots(figsize=(100, 60))
+        # ax3.grid()
         
         
-        cumsum_date = date_filter_cumsum.index
-        cumsum_precip_value  = date_filter_cumsum
+        # cumsum_date = date_filter_cumsum.index
+        # # cumsum_precip_value  = date_filter_cumsum
   
         
-        #t_Yuba_Feather_RR.plot(ax=ax2,x="Date",y=0,kind="bar",color="red",label="Yuba Feather or Russian River AR")
-        #t_Santa_Ana.plot(ax=ax2,x="Date",y=0,kind="bar",color="blue",label="Santa Ana AR")
-        ax3.plot(cumsum_date, date_filter_cumsum,color="red")
-        #ax3.plot(Yuba_Russian.Date,Yuba_Russian.precip_mm,color="green",label="Yuba Feather/Russian River")
-        #ax3.plot(Santa_Ana.Date,Santa_Ana.precip_mm,color="blue",label="Santa Ana")
-        #t2.plot(ax=ax2,x="Date",y=0,kind="bar",color="green",label="all")
-        ax3.set_ylabel('daily cumlative precip (mm)',fontsize=70)
-        ax3.set_title('Precip Daily Cumulative Accumulation for ' + station_name,fontsize=70)
-        ax3.tick_params(axis='both', which='major', labelsize=40)
-        ax3.legend(loc="upper left",fontsize=70)
-        #ax3.set_xticks(np.arange(1,len(cumsum_date),1))
-        #ax3.set_xticks(np.arange(1,len(cumsum_date),10))
-        #fig3.savefig(station_name + "_"+args['vars'] + '_cumsum.png')
-        #  #cum_sum_precip_t.to_csv('test.csv')
-        # # station_data_out.to_csv('test2.csv')
-        # print(station_name)
-        # file_var2 = 'RadarOnly_QPE_01H'
-        # for i in events_torun:
-        #     start_date = i['start'].to_pydatetime()
-        #     end_date = i['end'].to_pydatetime()
-        #     outdirck = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-        #     if not os.path.exists(outdirck):
-        #         MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat,station_name)
-            
+  
+        # ax3.plot(cumsum_date, date_filter_cumsum,color="red")
+        # ax3.set_ylabel('daily cumlative precip (mm)',fontsize=70)
+        # ax3.set_title('Precip Daily Cumulative Accumulation for ' + station_name,fontsize=70)
+        # ax3.tick_params(axis='both', which='major', labelsize=40)
+        # ax3.legend(loc="upper left",fontsize=70)
+        # #fig3.savefig(station_name + "_"+args['vars'] + '_cumsum.png')
     else:
         print("No data available for " + station_name)
         

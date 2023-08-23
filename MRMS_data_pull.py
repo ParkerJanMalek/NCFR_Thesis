@@ -32,10 +32,10 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
 
     
     #bounding box California
-    min_lon = 360+station_lon - 2
-    max_lon = 360+station_lon + 2
-    min_lat = station_lat - 2
-    max_lat = station_lat + 2
+    min_lon = 360+station_lon - 4
+    max_lon = 360+station_lon + 4
+    min_lat = station_lat - 4
+    max_lat = station_lat + 4
     
     
     #bounding box Russia River
@@ -82,8 +82,8 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
     
     
     
-    file_var = 'RadarOnly_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
-    file_var2 = 'RadarOnly_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
+    file_var = 'GaugeCorr_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
+    file_var2 = 'GaugeCorr_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
     
     outdir = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
     
@@ -210,7 +210,7 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
         norm1 = mcolors.Normalize(vmin=0, vmax=1)
         # colorbar and labels
         cb = plt.colorbar(cm,orientation="horizontal",cmap=cmap_smooth)
-        ax.set_title('Gauge-Corrected QPE');
+        ax.set_title('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+'-'+str(hour));
         
         # Add a label to the color bar
         cb.set_label('mm')
