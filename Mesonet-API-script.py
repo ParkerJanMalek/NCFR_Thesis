@@ -248,8 +248,7 @@ for i in station_name_list:
             ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2019,1,14) or 
                                x['start'].date() == datetime.date(2019,1,14)]
         elif station_name == 'kove':
-            ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,2,6) or 
-                               x['start'].date() == datetime.date(2016,3,9)]
+            ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,2,6)]
             
             
         

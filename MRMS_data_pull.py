@@ -26,6 +26,7 @@ import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.colors import Normalize
+import matplotlib.axes as maxes
 import shutil
 
 def map_event(start_date,end_date,station_lon,station_lat,station_name):
@@ -178,7 +179,7 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
         
         
         
-        fig = plt.figure(figsize=(12,7))
+        fig= plt.figure(figsize=(20, 20))
     
         # this declares a recentered projection for Pacific areas
         usemap_proj = ccrs.PlateCarree(central_longitude=180)
@@ -199,8 +200,9 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
         ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=2)
         ax.add_feature(cfeature.STATES, linestyle=':', zorder=2)
         # plot grid lines
-        ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
-        
+        gl=ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+        gl.xlabel_style = {'size': 25}
+        gl.ylabel_style = {'size': 25}
         
         cm = ax.contourf(lon2d, lat2d, ca_values,clevs,cmap=cmap_smooth,
                          transform=ccrs.PlateCarree(), zorder=1)
@@ -210,10 +212,10 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
         norm1 = mcolors.Normalize(vmin=0, vmax=1)
         # colorbar and labels
         cb = plt.colorbar(cm,orientation="horizontal",cmap=cmap_smooth)
-        ax.set_title('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+'-'+str(hour));
-        
+        ax.set_title('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+'-'+str(hour),fontsize=35);
+        cb.ax.tick_params(labelsize=25)
         # Add a label to the color bar
-        cb.set_label('mm')
+        cb.set_label('mm',fontsize=25)
         
         #cb  = ax.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
         
