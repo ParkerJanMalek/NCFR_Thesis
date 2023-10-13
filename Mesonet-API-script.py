@@ -12,6 +12,7 @@ import shutil
 import os
 
 import MRMS_data_pull as MRMS
+import Nexrad_S3_Demo as NEXRAD
 
 # stage four quanitiative precipitation (hourly radar product)
 # find the ARs that are colocated
@@ -114,7 +115,7 @@ AR_pd["Russian River"] = (AR_pd.latitude >= 38) & (AR_pd.latitude <= 40)
 #kl35 = Big Bear
 #kajo = Corona
 #['kcic','kuki','ksts','kapc','k069','kmyv','kove','kgoo',ko05','ktrk','kblu','kcno','kl35','kajo',
-station_name_list =['kove','kral']#['kove']#['kral','kuki','ksts','kapc','kcno','kajo']#['kcic','kuki','ksts','kapc','k069','kmyv','kove','kgoo','ko05','ktrk','kblu','kcno','kl35','kajo','kral']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
+station_name_list =['kove']#['kove']#['kral','kuki','ksts','kapc','kcno','kajo']#['kcic','kuki','ksts','kapc','k069','kmyv','kove','kgoo','ko05','ktrk','kblu','kcno','kl35','kajo','kral']#["kmvy","kove"]#,"kcno",'klax','krdd','ksmo','kcic','kpdx','ksfo','klax','krdd','ksmo','kcic','C3BCC','C3BVS','C3CAT','C3DLA','C3DRW','C3FRC','C3GPO','C3HDC','C3HRD','C3NBB','C3NCM','C3POR','C3PVN','C3SKI','C3SKY','C3SOD','C3WDG','C3WPO']
 #station_boundary = ['yfrr','yfrr','yfrr','yfrr']
 
 station_window = {'kcic':'yfrr','kuki':'yfrr','ksts':'yfrr','kapc':'yfrr','k069':'yfrr','kmyv':'yfrr','kove':'yfrr','kgoo':'yfrr','ko05':'yfrr','ktrk':'yfrr','kblu':'yfrr','kcno':'sa','kl35':'sa','kajo':'sa','kral':'sa'}
@@ -160,8 +161,8 @@ for i in station_name_list:
         
         #find AR lat
         near_AR_lat = find_nearest_value(station_lat,AR_pd['latitude'])
-        near_AR_lat_p1 = near_AR_lat+0.5
-        near_AR_lat_m1 = near_AR_lat-0.5
+        near_AR_lat_p1 = near_AR_lat+1.5
+        near_AR_lat_m1 = near_AR_lat-1.5
         
         AR_intersect = AR_pd.loc[(AR_pd['latitude']==near_AR_lat) | (AR_pd['latitude']==near_AR_lat_p1) | (AR_pd['latitude']==near_AR_lat_m1),:]
         AR_intersect['date'] = pd.to_datetime(AR_intersect[['year','month','day']])
@@ -239,16 +240,16 @@ for i in station_name_list:
         filtered_event_total = [x for x in event_id if x['multimodal']]
         
         #kuki selected events
-        import datetime
-        if station_name == 'kuki':
-           ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,1,6) or 
-                              x['start'].date() == datetime.date(2019,2,8) or
-                              x['start'].date() == datetime.date(2021,10,20)]
-        elif station_name == 'kral':
-            ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2019,1,14) or 
-                               x['start'].date() == datetime.date(2019,1,14)]
-        elif station_name == 'kove':
-            ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,2,6)]
+        # import datetime
+        # if station_name == 'kuki':
+        #    ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,1,6) or 
+        #                       x['start'].date() == datetime.date(2019,2,8) or
+        #                       x['start'].date() == datetime.date(2021,10,20)]
+        # elif station_name == 'kral':
+        #     ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2019,1,14) or 
+        #                        x['start'].date() == datetime.date(2019,1,14)]
+        # elif station_name == 'kove':
+        #     ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,2,6)]
             
             
         
@@ -344,12 +345,13 @@ for i in station_name_list:
         
      #isolate day, plot cumulation
         
-        file_var2 = 'GaugeCorr_QPE_01H'
-        for i in ts_selected:
-            outdirck = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+        # file_var2 = 'GaugeCorr_QPE_01H'
+        # for i in ts_selected:
+        #     outdirck = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+        #     NEXRAD.pull_radar(i['start'].to_pydatetime(), i['end'].to_pydatetime(),'yf')
             #if not os.path.exists(outdirck):
-            MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat,station_name)
-        
+            #MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat,station_name)
+            
         #kuki
         #start_date = event_id[92]['start']
         #end_date = event_id[92]['end']
@@ -362,28 +364,28 @@ for i in station_name_list:
         # else: 
         #     date_filter = station_data_hourly[start_date:end_date]
         #     date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
-        # multimodal= 1
-        # for i in filtered_event_total:
-        #     if(plot_full_record):
-        #         date_filter_cumsum = merged_cumsum
-        #     else: 
-        #         date_filter = station_data_hourly[i['start']:i['end']]
-        #         date_filter_cumsum = station_data_hourly[i['start']:i['end']].cumsum()
-        #     fig,ax = plt.subplots(figsize=(40, 20))
-        #     ax.bar(date_filter.index,date_filter,width=0.01)
-        #     #date_filter.plot(kind="bar")
-        #     # ax.set_xticks(np.arange(1,len(date_filter),1))
-        #     # ax.set_xticks(np.arange(1,len(date_filter),5))
-        #     fig.suptitle('Hourly Rainfall at '+station_name.upper() , fontsize=60)
-        #     plt.ylabel('Precipiation (mm)', fontsize=50)
-        #     plt.xlabel('Date', fontsize=50)
-        #     plt.xticks(fontsize=30,rotation=40)
-        #     plt.yticks(fontsize=30)
-        #     ax.grid()
-        #     date_form = DateFormatter("%m-%d-%Y-%H")
-        #     ax.xaxis.set_major_formatter(date_form)
-        #     fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist.png')  
-        #     multimodal = multimodal + 1
+        multimodal= 1
+        for i in filtered_event_total:
+            if(plot_full_record):
+                date_filter_cumsum = merged_cumsum
+            else: 
+                date_filter = station_data_hourly[i['start']:i['end']]
+                date_filter_cumsum = station_data_hourly[i['start']:i['end']].cumsum()
+            fig,ax = plt.subplots(figsize=(40, 20))
+            ax.bar(date_filter.index,date_filter,width=0.01)
+            #date_filter.plot(kind="bar")
+            # ax.set_xticks(np.arange(1,len(date_filter),1))
+            # ax.set_xticks(np.arange(1,len(date_filter),5))
+            fig.suptitle('Multimodal Event Rainfall at '+station_name.upper() , fontsize=60)
+            plt.ylabel('Precipiation (mm)', fontsize=50)
+            plt.xlabel('Date', fontsize=50)
+            plt.xticks(fontsize=30,rotation=40)
+            plt.yticks(fontsize=30)
+            ax.grid()
+            date_form = DateFormatter("%m-%d-%Y-%H")
+            ax.xaxis.set_major_formatter(date_form)
+            fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist.png')  
+            multimodal = multimodal + 1
         # fig1,ax1 = plt.subplots(figsize=(40, 25))
         # ax1.plot(date_filter.index,date_filter)
         # fig1.suptitle('Hourly Precipiation at '+station_name.upper(), fontsize=60)
