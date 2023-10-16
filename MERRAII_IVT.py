@@ -22,6 +22,10 @@ from mpl_toolkits.basemap import Basemap #installed using
     #conda install -c anaconda basemap
 #import scipy.io
 from datetime import datetime
+import os
+import paramiko
+
+#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2_400.tavg1_2d_int_Nx.20191231.SUB.nc D:\PSU Thesis\data\"
 #%% IMPORT EXTREME DAYS DATA
 # change directory and import SOM data from .mat file
 #mat_dir='I:\\Emma\\FIROWatersheds\\Data\\SOMs\\SomOutput'
@@ -32,44 +36,30 @@ percentile = 90
 latmin, latmax = (15.5,65.5)
 lonmin, lonmax = (-170.25,-105.75)
 
-# import extreme precipitation days and events
-data_dir='I:\\Emma\\FIROWatersheds\\Data\\'
-os.chdir(data_dir)
-extremedays = np.load(f'{percentile}Percentile_ExtremeDays.npy',allow_pickle=True)
-alleventdates = np.load(f'{percentile}Percentile_{numpatterns}NodeClusteredEvents.npy',allow_pickle=True)
 
-# find 6-day extreme event
-eventlength = 6
-for i in alleventdates:
-    if len(i) == eventlength:
-        extremeevent = i
-
-# find index of first day of extreme event 
-eventstart, = np.where(extremedays == str(extremeevent[0]))
-eventstart = eventstart[0]
 #%% IMPORT MERRA2 DATA
 # define metvar
 metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAnom']
 metvars = ['IVT']
 #metvar = '300W'
 for metvar in metvars:
-    #define composite location
-    #metvar = input('Enter MERRA-2 Variable: Z500, SLP, 850T, 300W, or IVT \n')
-    if metvar == 'Z500Anom':
-        folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\Z500'
-        filename = f'MERRA2_Z500_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    elif metvar == 'SLPAnom':
-        folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\SLP'
-        filename = f'MERRA2_SLP_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    elif metvar == '850TAnom':
-        folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\850T'
-        filename = f'MERRA2_850T_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    else:
-        folderpath = f'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\{metvar}'
-        filename = f'MERRA2_{metvar}_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    filepath = os.path.join(folderpath,filename)
-    
-    
+    # #define composite location
+    # #metvar = input('Enter MERRA-2 Variable: Z500, SLP, 850T, 300W, or IVT \n')
+    # if metvar == 'Z500Anom':
+    #     folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\Z500'
+    #     filename = f'MERRA2_Z500_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
+    # elif metvar == 'SLPAnom':
+    #     folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\SLP'
+    #     filename = f'MERRA2_SLP_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
+    # elif metvar == '850TAnom':
+    #     folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\850T'
+    #     filename = f'MERRA2_850T_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
+    # else:
+    #     folderpath = f'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\{metvar}'
+    #     filename = f'MERRA2_{metvar}_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
+    # filepath = os.path.join(folderpath,filename)
+    filepath = "D:/PSU Thesis/data/MERRA2_400.tavg1_2d_int_Nx.20170207.SUB.nc"
+
     #COLLECT VARIABLE DATA FROM MERRA2 FILE
     merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
     #open the netcdf file in read mode
@@ -81,21 +71,11 @@ for metvar in metvars:
         Uvapor = gridfile.variables['UFLXQV'][:]
         Vvapor = gridfile.variables['VFLXQV'][:]
         merra = np.sqrt(Uvapor**2 + Vvapor**2)
-    elif metvar == '300W':
-        Uwind = gridfile.variables['U'][:]
-        Vwind = gridfile.variables['V'][:]
-        merra = np.sqrt(Uwind**2 + Vwind**2)
-    elif 'Anom' in metvar:
-        merra = np.load(os.path.join(folderpath,f'MERRA2_{metvar}_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.npy'))
-    else:
-        merra = gridfile.variables[merravar[metvar]][:]
     gridfile.close()
     
     merra = np.squeeze(merra)
     
-    if metvar == 'SLP':
-        merra = merra/100
-        
+   
     #%% REDUCE LAT AND LON TO DESIRED AREA
     
     #REDUCE VARIABLES TO DESIRED AREA
@@ -113,24 +93,6 @@ for metvar in metvars:
     
     #print(np.amin(merrareduced),np.amax(merrareduced))
     
-    #%% DETERMINE MAX AND MIN VALUES
-    zmax = 0
-    zmin = 1E8
-    
-    for n in np.arange(eventstart,eventstart+eventlength,1):
-        
-        arr = merrareduced[n,:,:]
-        
-        #determine zmax and zmin for all days
-        highlim = np.nanmax(arr)
-        lowlim = np.nanmin(arr)
-        print(lowlim,highlim)
-        if highlim > zmax:
-            zmax = highlim
-        if lowlim < zmin:
-            zmin = lowlim
-    
-    print(f'Lowest Value:{zmin} \nHighest Value:{zmax}')
     
     #%% CREATE ANOMALY MAP 
     #GENERATE CUSTOM COLORMAP
@@ -145,15 +107,9 @@ for metvar in metvars:
         return newmap
     
     #%% DEFINE PLOTTING VARIABLES
-    if metvar == 'Z500Anom':
-        lowanom, highanom = (-2.0, 1.1)
-        newmap = center_colormap(lowanom, highanom, center=0)
-    elif metvar == 'SLPAnom':
-        lowanom, highanom = (-2.4, 0.9)
-        newmap = center_colormap(lowanom, highanom, center=0)
-    else:
-        lowanom, highanom = (-1.3, 1.2)
-        newmap = center_colormap(lowanom, highanom, center=0)
+
+    lowanom, highanom = (-1.3, 1.2)
+    newmap = center_colormap(lowanom, highanom, center=0)
     lowlims = {'Z500':2850,'SLP':985,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAnom':lowanom}
     highlims = {'Z500':5700,'SLP':1022,'IVT':1212,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAnom':highanom}
     
@@ -169,12 +125,12 @@ for metvar in metvars:
     #%% PLOT NODES from MATLAB
     
     #create subplot for mapping multiple timesteps
-    fig = plt.figure(figsize=(7.2,4))
     i = 0
-    for n in np.arange(eventstart,eventstart+eventlength,1):
-        #MAP DESIRED VARIABLE
-        # define date of plot
-        datetitle = datetime.strptime(str(extremeevent[i]),'%Y%m%d')
+    #MAP DESIRED VARIABLE
+    # define date of plot
+    for n in np.arange(1,24):
+        fig = plt.figure()
+        datetitle =  "IVT for 2017-02 - hour " + str(i+1)
         # reduce merra to desired day
         arr = merrareduced[n,:,:]
         #convert lat and lon into a 2D array
@@ -185,14 +141,15 @@ for metvar in metvars:
         map = Basemap(projection='cyl',llcrnrlat=latmin,urcrnrlat=latmax,llcrnrlon=lonmin,\
                   urcrnrlon=lonmax,resolution='l',area_thresh=area_thresh)
         xi, yi = map(lon,lat)
-        ax = fig.add_subplot(2,3,i+1)
-        ax.set_title('{:%d %b}'.format(datetitle),pad=4,fontsize=12)
+        ax = fig.add_subplot()
+        ax.set_title(datetitle,pad=4,fontsize=12)
+        #ax.set_title('{:%d %b}'.format(datetitle),pad=4,fontsize=12)
         # sublabel_loc = mtransforms.ScaledTranslation(4/72, -4/72, fig.dpi_scale_trans)
         # ax.text(0.0, 1.0, extremeevent[i], transform=ax.transAxes + sublabel_loc,
         #     fontsize=9, fontweight='bold', verticalalignment='top', 
         #     bbox=dict(facecolor='1', edgecolor='none', pad=1.5),zorder=3)
         #create colormap of MERRA2 data
-        colorm = map.pcolor(xi,yi,arr,shading='auto',cmap=colormap[metvar],vmin=lowlims[metvar],vmax=highlims[metvar],zorder=1)
+        colorm = map.pcolor(xi,yi,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=1)
         
         #define border color and thickness
         border_c = '0.4'
@@ -204,36 +161,33 @@ for metvar in metvars:
         gridlinefont = 8.5
         parallels = np.arange(20.,71.,20.)
         meridians = np.arange(-160.,-109.,20.)
-        if i in np.arange(0,10,3):
-            map.drawparallels(parallels, labels=[1,0,0,0], fontsize=gridlinefont,color=border_c,linewidth=border_w)
-            map.drawmeridians(meridians, labels=[0,0,0,1], fontsize=gridlinefont,color=border_c,linewidth=border_w)
-        else:
-            map.drawparallels(parallels, color=border_c,linewidth=border_w)
-            map.drawmeridians(meridians, labels=[0,0,0,1], fontsize=gridlinefont,color=border_c,linewidth=border_w)
-        #define contour color and thickness
+        map.drawparallels(parallels, labels=[1,0,0,0], fontsize=gridlinefont,color=border_c,linewidth=border_w)
+        map.drawmeridians(meridians, labels=[0,0,0,1], fontsize=gridlinefont,color=border_c,linewidth=border_w)
+         #define contour color and thickness
         contour_c = '0.1'
         contour_w = 0.7
         #create contour map
-        contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart[metvar],highlims[metvar]+1,contourint[metvar]),zorder=2)
+        contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
         plt.clabel(contourm,levels=contourm.levels[::2],fontsize=6,inline_spacing=1,colors='k',zorder=2,manual=False)
             
         #add yuba shape
         #map.readshapefile(os.path.join(ws_directory,f'{watershed}'), watershed,linewidth=0.8,color='r')
-        plt.scatter(-120.9,39.5,color='w',marker='*',linewidths=0.7,zorder=4)
+        plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=0.7,zorder=4)
+        #cbar_ax = fig.add_axes([0.9,0.05,0.025,0.88]) #bottom colorbar
+        cbar = fig.colorbar(colorm,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
+        cbar.ax.tick_params(labelsize=8)
+        cbar.set_label(cbarlabs['IVT'],fontsize=8.5,labelpad=0.5,fontweight='bold')
+            
+        # #CUSTOMIZE SUBPLOT SPACING
+        # fig.subplots_adjust(left=0.05,right=0.89,bottom=0.021, top=0.955,hspace=0.05, wspace=0.05) #bottom colorbar
+        # #fig.add_axis([left,bottom, width,height])
+        # cbar_ax = fig.add_axes([0.9,0.05,0.025,0.88]) #bottom colorbar
+        # cbar = fig.colorbar(colorm, cax=cbar_ax,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
+        # cbar.ax.tick_params(labelsize=8)
+        # cbar.set_label(cbarlabs['IVT'],fontsize=8.5,labelpad=0.5,fontweight='bold')
         
-        i += 1
-        
-    #CUSTOMIZE SUBPLOT SPACING
-    fig.subplots_adjust(left=0.05,right=0.89,bottom=0.021, top=0.955,hspace=0.05, wspace=0.05) #bottom colorbar
-    #fig.add_axis([left,bottom, width,height])
-    cbar_ax = fig.add_axes([0.9,0.05,0.025,0.88]) #bottom colorbar
-    cbar = fig.colorbar(colorm, cax=cbar_ax,ticks=np.arange(cbarstart[metvar],highlims[metvar]+1,cbarint[metvar]),orientation='vertical')
-    cbar.ax.tick_params(labelsize=8)
-    cbar.set_label(cbarlabs[metvar],fontsize=8.5,labelpad=0.5,fontweight='bold')
-    
-        
-    #SHOW MAP
-    save_dir='I:\\Emma\\FIROWatersheds\\Figures\\Events'
-    os.chdir(save_dir)
-    plt.savefig(f'{eventlength}day_event_{metvar}.png',dpi=300)
-    plt.show()
+            
+        #SHOW MAP
+        fig.savefig("D:/PSU Thesis/data/IVT-"+str(i+1)+".png",dpi=300)
+        i = i+1
+        plt.show()

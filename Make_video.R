@@ -1,5 +1,5 @@
 library(av)
-
+library(gtools)
 # Set the directory where your images are located
 # image_dir <- c("D:\\PSU Thesis\\data\\kuki_GaugeCorr_QPE_01H_2017162_20171132",
 #                "D:\\PSU Thesis\\data\\kuki_GaugeCorr_QPE_01H_20192811_201921711",
@@ -7,10 +7,9 @@ library(av)
 #                "D:\\PSU Thesis\\data\\kral_GaugeCorr_QPE_01H_20191142_20191182")
 
 
-image_dir <- c("D:\\PSU Thesis\\data\\kove_GaugeCorr_QPE_01H_2017260_20172100")
+image_dir <- c("D:\\PSU Thesis\\data\\")
 for (j in image_dir){
-  regex_folder <- list.files(j,"GaugeCorr_QPE")
-
+  regex_folder <- mixedsort(list.files(j,"IVT-"),decreasing=TRUE)
 
   #for(i in regex_folder){
     # Get a list of image file names in the directory
