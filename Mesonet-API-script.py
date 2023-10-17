@@ -12,7 +12,6 @@ import shutil
 import os
 
 import MRMS_data_pull as MRMS
-import Nexrad_S3_Demo as NEXRAD
 
 # stage four quanitiative precipitation (hourly radar product)
 # find the ARs that are colocated
@@ -130,8 +129,8 @@ plot_full_record = False
 output_5_perc_data = 'D:\\PSU Thesis\\data\\precip_threshold_dates\\'
 
 #define cumsum dates
-start_date = dtetme.datetime(2019,1,12,9)
-end_date = dtetme.datetime(2019,1,13,1)
+start_date = dtetme.datetime(2017,2,1,0)
+end_date = dtetme.datetime(2017,3,5,23)
 
 
 
@@ -207,7 +206,7 @@ for i in station_name_list:
         
         sum_events = s_e_sum[0]['accum']
         
-        sum_events_uq_thres = np.quantile(sum_events,0.95)
+        sum_events_uq_thres = sum_events#np.quantile(sum_events,0.95)
         
         thres_boolean = sum_events >= sum_events_uq_thres
         
@@ -248,8 +247,8 @@ for i in station_name_list:
         # elif station_name == 'kral':
         #     ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2019,1,14) or 
         #                        x['start'].date() == datetime.date(2019,1,14)]
-        # elif station_name == 'kove':
-        #     ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2017,2,6)]
+        if station_name == 'kove':
+            ts_selected  = [x for x in event_id if x['start'].date().year == 2017 and x['start'].date().month == 2]
             
             
         
@@ -345,10 +344,10 @@ for i in station_name_list:
         
      #isolate day, plot cumulation
         
-        # file_var2 = 'GaugeCorr_QPE_01H'
-        # for i in ts_selected:
-        #     outdirck = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-        #     NEXRAD.pull_radar(i['start'].to_pydatetime(), i['end'].to_pydatetime(),'yf')
+        file_var2 = 'GaugeCorr_QPE_01H'
+        #for i in ts_selected:
+            #outdirck = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            #NEXRAD.pull_radar(i['start'].to_pydatetime(), i['end'].to_pydatetime(),'yf')
             #if not os.path.exists(outdirck):
             #MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat,station_name)
             
@@ -359,44 +358,47 @@ for i in station_name_list:
         #kove
         # start_date = event_id[32]['start'] 
         # end_date = event_id[32]['end'] 
-        # if(plot_full_record):
-        #     date_filter_cumsum = merged_cumsum
-        # else: 
-        #     date_filter = station_data_hourly[start_date:end_date]
-        #     date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
-        multimodal= 1
-        for i in filtered_event_total:
-            if(plot_full_record):
-                date_filter_cumsum = merged_cumsum
-            else: 
-                date_filter = station_data_hourly[i['start']:i['end']]
-                date_filter_cumsum = station_data_hourly[i['start']:i['end']].cumsum()
-            fig,ax = plt.subplots(figsize=(40, 20))
-            ax.bar(date_filter.index,date_filter,width=0.01)
-            #date_filter.plot(kind="bar")
-            # ax.set_xticks(np.arange(1,len(date_filter),1))
-            # ax.set_xticks(np.arange(1,len(date_filter),5))
-            fig.suptitle('Multimodal Event Rainfall at '+station_name.upper() , fontsize=60)
-            plt.ylabel('Precipiation (mm)', fontsize=50)
-            plt.xlabel('Date', fontsize=50)
-            plt.xticks(fontsize=30,rotation=40)
-            plt.yticks(fontsize=30)
-            ax.grid()
-            date_form = DateFormatter("%m-%d-%Y-%H")
-            ax.xaxis.set_major_formatter(date_form)
-            fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist.png')  
-            multimodal = multimodal + 1
-        # fig1,ax1 = plt.subplots(figsize=(40, 25))
-        # ax1.plot(date_filter.index,date_filter)
-        # fig1.suptitle('Hourly Precipiation at '+station_name.upper(), fontsize=60)
-        # plt.ylabel('Precipiation (mm)', fontsize=50)
-        # plt.xlabel('Date', fontsize=50)
-        # plt.xticks(fontsize=30,rotation=45)
-        # plt.yticks(fontsize=30)
-        # ax1.grid()
-        # date_form = DateFormatter("%m-%d-%Y-%H")
-        # ax1.xaxis.set_major_formatter(date_form)
-        # #fig1.savefig(station_name + "_"+args['vars'] + '_line.png')   
+        if(plot_full_record):
+            date_filter_cumsum = merged_cumsum
+            date_filter = station_data_hourly
+        else: 
+            date_filter = station_data_hourly[start_date:end_date]
+            date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
+        # multimodal= 1
+        # for i in filtered_event_total:
+        #     if(plot_full_record):
+        #         date_filter_cumsum = merged_cumsum
+        #     else: 
+        #         date_filter = station_data_hourly[i['start']:i['end']]
+        #         date_filter_cumsum = station_data_hourly[i['start']:i['end']].cumsum()
+        #     fig,ax = plt.subplots(figsize=(40, 20))
+        #     ax.bar(date_filter.index,date_filter,width=0.01)
+        #     #date_filter.plot(kind="bar")
+        #     # ax.set_xticks(np.arange(1,len(date_filter),1))
+        #     # ax.set_xticks(np.arange(1,len(date_filter),5))
+        #     fig.suptitle('Multimodal Event Rainfall at '+station_name.upper() , fontsize=60)
+        #     plt.ylabel('Precipiation (mm)', fontsize=50)
+        #     plt.xlabel('Date', fontsize=50)
+        #     plt.xticks(fontsize=30,rotation=40)
+        #     plt.yticks(fontsize=30)
+        #     ax.grid()
+        #     date_form = DateFormatter("%m-%d-%Y-%H")
+        #     ax.xaxis.set_major_formatter(date_form)
+        #     fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist.png')  
+        #     multimodal = multimodal + 1
+        fig1,ax1 = plt.subplots(figsize=(20, 12.5))
+        ax1.plot(date_filter.index,date_filter)
+        fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
+        plt.ylabel('Precipiation (mm)', fontsize=25)
+        plt.xlabel('Date', fontsize=25,labelpad=-0.5)
+        plt.xticks(fontsize=15,rotation=45)
+        plt.yticks(fontsize=15)
+        ax1.grid()
+        date_form = DateFormatter("%m-%d-%Y-%H")
+        ax1.xaxis.set_major_formatter(date_form)
+        ax2 = fig1.gca()
+        ax2.set_ylim([0, None])
+        fig1.savefig(station_name + '_line.png',dpi=300, bbox_inches = "tight")   
         
         # fig3,ax3 = plt.subplots(figsize=(100, 60))
         # ax3.grid()

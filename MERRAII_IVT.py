@@ -25,13 +25,10 @@ from datetime import datetime
 import os
 import paramiko
 
-#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2_400.tavg1_2d_int_Nx.20191231.SUB.nc D:\PSU Thesis\data\"
+#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2.README.pdf D:\PSU Thesis\data\"
 #%% IMPORT EXTREME DAYS DATA
 # change directory and import SOM data from .mat file
 #mat_dir='I:\\Emma\\FIROWatersheds\\Data\\SOMs\\SomOutput'
-numpatterns = 9
-percentile = 90
-
 # define lat, lon region of data for plotting
 latmin, latmax = (15.5,65.5)
 lonmin, lonmax = (-170.25,-105.75)
@@ -43,22 +40,7 @@ metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAnom']
 metvars = ['IVT']
 #metvar = '300W'
 for metvar in metvars:
-    # #define composite location
-    # #metvar = input('Enter MERRA-2 Variable: Z500, SLP, 850T, 300W, or IVT \n')
-    # if metvar == 'Z500Anom':
-    #     folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\Z500'
-    #     filename = f'MERRA2_Z500_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    # elif metvar == 'SLPAnom':
-    #     folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\SLP'
-    #     filename = f'MERRA2_SLP_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    # elif metvar == '850TAnom':
-    #     folderpath = 'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\850T'
-    #     filename = f'MERRA2_850T_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    # else:
-    #     folderpath = f'I:\\Emma\\FIROWatersheds\\Data\\DailyMERRA2\\{metvar}'
-    #     filename = f'MERRA2_{metvar}_Yuba_Extremes{percentile}_Daily_1980-2021_WINTERDIST.nc'
-    # filepath = os.path.join(folderpath,filename)
-    filepath = "D:/PSU Thesis/data/MERRA2_400.tavg1_2d_int_Nx.20170207.SUB.nc"
+    filepath = "D:/PSU Thesis/data/MERRA2_400.tavg1_2d_int_Nx.20170203.SUB.nc"
 
     #COLLECT VARIABLE DATA FROM MERRA2 FILE
     merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
@@ -130,7 +112,7 @@ for metvar in metvars:
     # define date of plot
     for n in np.arange(1,24):
         fig = plt.figure()
-        datetitle =  "IVT for 2017-02 - hour " + str(i+1)
+        datetitle =  "IVT for 2017-02-03 - hour " + str(i+1)
         # reduce merra to desired day
         arr = merrareduced[n,:,:]
         #convert lat and lon into a 2D array
@@ -188,6 +170,6 @@ for metvar in metvars:
         
             
         #SHOW MAP
-        fig.savefig("D:/PSU Thesis/data/IVT-"+str(i+1)+".png",dpi=300)
+        fig.savefig("D:/PSU Thesis/data/IVT-2017-02-03 "+str(i+1)+".png",dpi=300)
         i = i+1
         plt.show()
