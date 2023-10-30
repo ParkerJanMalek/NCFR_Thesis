@@ -20,7 +20,7 @@ import numpy as np
 import cartopy.crs as ccrs
 import xarray as xr
 import pandas as pd
-
+import cartopy
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
@@ -86,7 +86,7 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
     file_var = 'GaugeCorr_QPE_01H_00' #PrecipRate_00, GaugeCorr_QPE_01H_00,RadarOnly_QPE_01H_00
     file_var2 = 'GaugeCorr_QPE_01H' #GaugeCorr_QPE_01H,PrecipRate,RadarOnly_QPE_01H
     
-    outdir = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+    outdir = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
     
     if os.path.exists(outdir):
         shutil.rmtree(outdir)

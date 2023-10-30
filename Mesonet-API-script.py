@@ -59,7 +59,7 @@ def find_nearest_value(target, values):
     return nearest
 
 #open AR time series
-with open('D:\\PSU Thesis\\data\\AR_California_Landfall.pickle', 'rb') as data:
+with open('G:\\NCFR Thesis\\NCFR_Thesis\\AR_California_Landfall.pickle', 'rb') as data:
     AR_TS = pickle.load(data)
     
 def myround(x, prec=2, base=.5):
@@ -74,17 +74,17 @@ def data_availability_check(station_name,token,var):
     else:
         return(False)
 
-AR_point = []
+# AR_point = []
 
-for i in range(0,len(AR_TS)):
-    latlon_time = [AR_TS[i][0],AR_TS[i][1]-360,AR_TS[i][2].astype(object).year,AR_TS[i][2].astype(object).month,AR_TS[i][2].astype(object).day,AR_TS[i][2].astype(object).hour]
-    AR_point.append(latlon_time)
-AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude","year","month","day","hour"])
+# for i in range(0,len(AR_TS)):
+#     latlon_time = [AR_TS[i][0],AR_TS[i][1]-360,AR_TS[i][2].astype(object).year,AR_TS[i][2].astype(object).month,AR_TS[i][2].astype(object).day,AR_TS[i][2].astype(object).hour]
+#     AR_point.append(latlon_time)
+# AR_pd = pd.DataFrame(AR_point,columns=["latitude","longitude","year","month","day","hour"])
 
-#define boundaries for reserviors
-AR_pd["Yuba-Feather"] = (AR_pd.latitude >= 37) & (AR_pd.latitude <= 40)
-AR_pd["Santa Ana"] = (AR_pd.latitude >= 32) & (AR_pd.latitude <= 37)
-AR_pd["Russian River"] = (AR_pd.latitude >= 38) & (AR_pd.latitude <= 40)
+# #define boundaries for reserviors
+# AR_pd["Yuba-Feather"] = (AR_pd.latitude >= 37) & (AR_pd.latitude <= 40)
+# AR_pd["Santa Ana"] = (AR_pd.latitude >= 32) & (AR_pd.latitude <= 37)
+# AR_pd["Russian River"] = (AR_pd.latitude >= 38) & (AR_pd.latitude <= 40)
 
     
     
@@ -119,18 +119,18 @@ station_name_list =['kove']#['kove']#['kral','kuki','ksts','kapc','kcno','kajo']
 
 station_window = {'kcic':'yfrr','kuki':'yfrr','ksts':'yfrr','kapc':'yfrr','k069':'yfrr','kmyv':'yfrr','kove':'yfrr','kgoo':'yfrr','ko05':'yfrr','ktrk':'yfrr','kblu':'yfrr','kcno':'sa','kl35':'sa','kajo':'sa','kral':'sa'}
 
-AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
+# AR_Catalog = pd.read_excel('D:\\PSU Thesis\\data\\ARcatalog_NCEP_NEW_1948-2018_Comprehensive_FINAL_29JAN18.xlsx',"AR_Events")
 # check for highest resolution of precip data 
 
 
 var = 'precip_accum_one_hour'
 unit = 'precip|mm'
 plot_full_record = False
-output_5_perc_data = 'D:\\PSU Thesis\\data\\precip_threshold_dates\\'
+output_5_perc_data = 'G:\\NCFR Thesis\\NCFR_Thesis\\precip_threshold_dates\\'
 
 #define cumsum dates
-start_date = dtetme.datetime(2017,2,1,0)
-end_date = dtetme.datetime(2017,3,5,23)
+start_date = dtetme.datetime(2017,2,5,0)
+end_date = dtetme.datetime(2017,2,11,23)
 
 
 
@@ -159,12 +159,12 @@ for i in station_name_list:
         station_lat = float(responseDict_por['STATION'][0]['LATITUDE'])
         
         #find AR lat
-        near_AR_lat = find_nearest_value(station_lat,AR_pd['latitude'])
-        near_AR_lat_p1 = near_AR_lat+1.5
-        near_AR_lat_m1 = near_AR_lat-1.5
+        # near_AR_lat = find_nearest_value(station_lat,AR_pd['latitude'])
+        # near_AR_lat_p1 = near_AR_lat+1.5
+        # near_AR_lat_m1 = near_AR_lat-1.5
         
-        AR_intersect = AR_pd.loc[(AR_pd['latitude']==near_AR_lat) | (AR_pd['latitude']==near_AR_lat_p1) | (AR_pd['latitude']==near_AR_lat_m1),:]
-        AR_intersect['date'] = pd.to_datetime(AR_intersect[['year','month','day']])
+        # AR_intersect = AR_pd.loc[(AR_pd['latitude']==near_AR_lat) | (AR_pd['latitude']==near_AR_lat_p1) | (AR_pd['latitude']==near_AR_lat_m1),:]
+        # AR_intersect['date'] = pd.to_datetime(AR_intersect[['year','month','day']])
         
         s = datetime.strptime(por_start[0:10],"%Y-%m-%d")
         e = datetime.strptime(por_end[0:10],"%Y-%m-%d")
@@ -226,8 +226,8 @@ for i in station_name_list:
         for r in time_spans:
             event_percentage = 100 * station_data_hourly[r['start']:r['end']]/r['event_total']
             dates_of_event = pd.DataFrame(np.unique(pd.to_datetime(station_data_hourly[r['start']:r['end']].index.date)))
-            AR_DF = np.unique(pd.to_datetime(AR_intersect['date']))
-            event_id.append({'start':r['start'],'end':r['end'],'event_rainfall':station_data_hourly[r['start']:r['end']],'event_total':r['event_total'] ,'event_perc':event_percentage,'associated_AR':any(any(row) for row in dates_of_event.isin(AR_DF).values),'multimodal':False})
+           # AR_DF = np.unique(pd.to_datetime(AR_intersect['date']))
+            event_id.append({'start':r['start'],'end':r['end'],'event_rainfall':station_data_hourly[r['start']:r['end']],'event_total':r['event_total'] ,'event_perc':event_percentage,'multimodal':False})
             event_total.append(r['event_total'])
 
         for i in np.arange(0,len(event_id)):
@@ -330,26 +330,25 @@ for i in station_name_list:
 
         ar_cols = ['year','month','day']
         
-        AR_pd['Date'] = AR_pd[ar_cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
+        #AR_pd['Date'] = AR_pd[ar_cols].apply(lambda x: '-'.join(x.values.astype(str)), axis="columns")
        # AR_pd['Date'] = pd.to_datetime(AR_pd["Date"])
-        t['mergedate'] = t.Date.dt.year.astype(str) + "-" + t.Date.dt.month.astype(str) + "-" + t.Date.dt.day.astype(str)
+       # t['mergedate'] = t.Date.dt.year.astype(str) + "-" + t.Date.dt.month.astype(str) + "-" + t.Date.dt.day.astype(str)
 
-        t2 = t.merge(AR_pd, left_on='mergedate', right_on='Date',how="left")
-        YRR = t2.loc[(t2["Yuba-Feather"]==True)]
-        SA = t2.loc[(t2["Santa Ana"]==True)]
+       # t2 = t.merge(AR_pd, left_on='mergedate', right_on='Date',how="left")
+       # YRR = t2.loc[(t2["Yuba-Feather"]==True)]
+        #SA = t2.loc[(t2["Santa Ana"]==True)]
         
-        merged_cumsum = t2[["index", 0, "Yuba-Feather","Santa Ana"]].drop_duplicates()
-        merged_cumsum.columns = ["Date","precip_mm","Yuba_Russian","Santa_Ana"]
-      
+        #merged_cumsum = t2[["index", 0, "Yuba-Feather","Santa Ana"]].drop_duplicates()
+       # merged_cumsum.columns = ["Date","precip_mm","Yuba_Russian","Santa_Ana"]
+        merged_cumsum = t
         
      #isolate day, plot cumulation
         
         file_var2 = 'GaugeCorr_QPE_01H'
-        #for i in ts_selected:
-            #outdirck = 'D:\\PSU Thesis\\data\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-            #NEXRAD.pull_radar(i['start'].to_pydatetime(), i['end'].to_pydatetime(),'yf')
-            #if not os.path.exists(outdirck):
-            #MRMS.map_event(i['start'].to_pydatetime(), i['end'].to_pydatetime(), station_lon, station_lat,station_name)
+       # for i in ts_selected:
+        outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+        if not os.path.exists(outdirck):
+            MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name)
             
         #kuki
         #start_date = event_id[92]['start']
@@ -362,6 +361,7 @@ for i in station_name_list:
             date_filter_cumsum = merged_cumsum
             date_filter = station_data_hourly
         else: 
+            station_data_hourly.index = station_data_hourly.index.tz_convert(None)
             date_filter = station_data_hourly[start_date:end_date]
             date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
         # multimodal= 1
