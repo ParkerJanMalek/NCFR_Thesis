@@ -10,6 +10,8 @@ import pickle
 from matplotlib.dates import DayLocator, DateFormatter
 import shutil
 import os
+import cartopy
+import cartopy.crs as ccrs
 
 import MRMS_data_pull as MRMS
 
@@ -129,8 +131,8 @@ plot_full_record = False
 output_5_perc_data = 'G:\\NCFR Thesis\\NCFR_Thesis\\precip_threshold_dates\\'
 
 #define cumsum dates
-start_date = dtetme.datetime(2017,2,5,0)
-end_date = dtetme.datetime(2017,2,11,23)
+start_date = dtetme.datetime(2017,2,7,0)
+end_date = dtetme.datetime(2017,2,7,23)
 
 
 

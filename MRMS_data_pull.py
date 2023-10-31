@@ -21,13 +21,15 @@ import cartopy.crs as ccrs
 import xarray as xr
 import pandas as pd
 import cartopy
-import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.colors import Normalize
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.axes as maxes
 import shutil
+from metpy.io import Level2File
+from metpy.plots import add_timestamp, ctables
 
 def map_event(start_date,end_date,station_lon,station_lat,station_name):
 
@@ -149,8 +151,9 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
                      (0.8549019694328308, 0.6509804129600525, 0.47058823704719543),
                      (0.6274510025978088, 0.42352941632270813, 0.23529411852359772),
                      (0.4000000059604645, 0.20000000298023224, 0.0)]
-        cmap = mcolors.ListedColormap(cmap_data, 'precipitation')
-        norm = mcolors.BoundaryNorm(clevs, cmap.N)
+        # cmap = mcolors.ListedColormap(cmap_data, 'precipitation')
+        # norm = mcolors.BoundaryNorm(clevs, cmap.N)
+        norm, cmap = ctables.registry.get_with_steps('NWSReflectivity', 5, 5)
         
         # Number of colors for the smoothed color map
         num_colors = len(cmap_data)
@@ -179,21 +182,19 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
         
         
         
-        fig= plt.figure(figsize=(20, 20))
-    
-        # this declares a recentered projection for Pacific areas
+        fig, ax = plt.subplots(figsize=(20, 20))
+        ax.axis('off')
+        
         usemap_proj = ccrs.PlateCarree(central_longitude=180)
         usemap_proj._threshold /= 20.  # to make greatcircle smooth
-    
+         
         ax = plt.axes(projection=usemap_proj)
         # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
         ax.set_extent([min_lon, max_lon, min_lat, max_lat], crs=ccrs.PlateCarree())
-    
+         
         geodetic = ccrs.Geodetic()
         plate_carree = ccrs.PlateCarree(central_longitude=180)
-    
-    
-    
+        ax.spines['right'].set_visible(False)
         ax.add_feature(cfeature.LAND)
         ax.add_feature(cfeature.OCEAN,color="white")
         ax.add_feature(cfeature.COASTLINE)
@@ -206,20 +207,42 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
         
         cm = ax.contourf(lon2d, lat2d, ca_values,clevs,cmap=cmap_smooth,
                          transform=ccrs.PlateCarree(), zorder=1)
-        ax.plot(station_lon,station_lat,marker='o', color='red', markersize=10, transform=ccrs.PlateCarree())
+        ax.plot(station_lon,station_lat,marker='o', color='red', markersize=20, transform=ccrs.PlateCarree())
         
-        ax.tick_params(axis='both', which='both', labelsize=8, direction='out')
+        ax.tick_params(axis='x', labelsize=35)
+        ax.tick_params(axis='y', labelsize=35)
         norm1 = mcolors.Normalize(vmin=0, vmax=1)
         # colorbar and labels
-        cb = plt.colorbar(cm,orientation="horizontal",cmap=cmap_smooth)
-        ax.set_title('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+'-'+str(hour),fontsize=35);
-        cb.ax.tick_params(labelsize=25)
+        # divider = make_axes_locatable(ax)
+         
+        # cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=0.05)
+        # cbar = plt.colorbar(cm, cax=cax,cmap=cmap_smooth, orientation='vertical')
+        # cbar.set_label(label='mm',size=35)
+        # cbar.ax.tick_params(labelsize=35)
+        divider = make_axes_locatable(ax)
+            
+        cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=0.05)
+        cbar = plt.colorbar(cm, cax=cax, orientation='vertical')
+        cbar.set_label(label='mm',size=35)
+        cbar.ax.tick_params(labelsize=35)
+        plt.setp(ax.get_xticklabels(), fontsize=35)
+        plt.setp(ax.get_yticklabels(), fontsize=35)
+        ax.tick_params(axis='x', labelsize=35)
+        ax.tick_params(axis='y', labelsize=35)
+        
+        plt.suptitle('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+" - "+str(hour) + ":00 UTC", fontsize=50)
+        plt.tight_layout()
+        plt.show()
+        
+        #cb = plt.colorbar(cm,orientation="horizontal",cmap=cmap_smooth)
+        #ax.set_title('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+'-'+str(hour),fontsize=35);
+        #cb.ax.tick_params(labelsize=25)
         # Add a label to the color bar
-        cb.set_label('mm',fontsize=25)
+        #cb.set_label('mm',fontsize=25)
         
         #cb  = ax.colorbar(cf,"bottom", size="7%", pad="10%",fig=fig,ax=ax)
         
-        plt.show()
+        #plt.show()
         
      
         # # Create the basemap object

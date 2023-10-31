@@ -40,7 +40,7 @@ metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAnom']
 metvars = ['IVT']
 #metvar = '300W'
 for metvar in metvars:
-    filepath = "D:/PSU Thesis/data/MERRA2_400.tavg1_2d_int_Nx.20170203.SUB.nc"
+    filepath = "G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_400.tavg1_2d_int_Nx.20170207.SUB.nc"
 
     #COLLECT VARIABLE DATA FROM MERRA2 FILE
     merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
@@ -112,7 +112,7 @@ for metvar in metvars:
     # define date of plot
     for n in np.arange(1,24):
         fig = plt.figure()
-        datetitle =  "IVT for 2017-02-03 - hour " + str(i+1)
+        datetitle =  "IVT on 2017-02-07 - " + str(i+1) +":00 UTC"
         # reduce merra to desired day
         arr = merrareduced[n,:,:]
         #convert lat and lon into a 2D array
@@ -170,6 +170,6 @@ for metvar in metvars:
         
             
         #SHOW MAP
-        fig.savefig("D:/PSU Thesis/data/IVT-2017-02-03 "+str(i+1)+".png",dpi=300)
+        fig.savefig("G:\\NCFR Thesis\\NCFR_Thesis\\IVT-2017-02-03 "+str(i+1)+".png",dpi=300)
         i = i+1
         plt.show()

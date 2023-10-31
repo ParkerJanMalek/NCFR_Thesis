@@ -33,8 +33,8 @@ import matplotlib.axes as maxes
 # from the Evansville, IN radar, which had convection within its
 # domain on 06/26/2019.
 #def pull_radar(start_date, end_date,watershed):
-start_date = dtetme.datetime(2017,2,7,5)
-end_date = dtetme.datetime(2017,2,7,7)
+start_date = dtetme.datetime(2017,2,7,7)
+end_date = dtetme.datetime(2017,2,7,8)
 watershed = 'yf'
 s3 = boto3.resource('s3', config=Config(signature_version=botocore.UNSIGNED,
                                         user_agent_extra='Resource'))
@@ -135,7 +135,7 @@ for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         plate_carree = ccrs.PlateCarree(central_longitude=180)
          
          
-         
+        
         ax.add_feature(cfeature.LAND)
         ax.add_feature(cfeature.OCEAN,color="white")
         ax.add_feature(cfeature.COASTLINE)
@@ -199,7 +199,8 @@ for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         # plt.show()
         # fig.savefig(savestr+".png")
         # i=i+1
-        plt.suptitle(savestr[0:4]+' Level 2 Data '+ savestr.split("_")[0][4:]+"_"+savestr.split("_")[1], fontsize=50)
+        ax.spines['right'].set_visible(False)
+        plt.suptitle(savestr[0:4]+' Level 2 Data '+ savestr.split("_")[0][4:]+" "+savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4] +" UTC", fontsize=50)
         plt.tight_layout()
         plt.show()
         fig.savefig(savestr+".png")
