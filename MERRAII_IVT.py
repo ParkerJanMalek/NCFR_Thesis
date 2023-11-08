@@ -25,7 +25,8 @@ from datetime import datetime
 import os
 import paramiko
 
-#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2.README.pdf D:\PSU Thesis\data\"
+#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2.README.pdf D:\PSU Thesis\data\"Research Statement High-Intensity Precipitation.docx
+#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/Parker/Papers/"Research Statement High-Intensity Precipitation.docx" C:\Users\malekP\
 #%% IMPORT EXTREME DAYS DATA
 # change directory and import SOM data from .mat file
 #mat_dir='I:\\Emma\\FIROWatersheds\\Data\\SOMs\\SomOutput'

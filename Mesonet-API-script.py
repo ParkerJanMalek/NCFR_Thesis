@@ -20,19 +20,19 @@ import MRMS_data_pull as MRMS
 # Specify request parameters (as strings)
 token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 
-def count_and_sum_events(time_series):
+def count_and_sum_events(time_series,hours_between):
     event_start = []
     event_end = []
     event_acum = []
     event_id = []
     for i in np.arange(0,len(time_series)-1):
-        if time_series[i] != 0 and ((np.all(time_series[i-24:i] == 0) and not time_series[i-24:i].empty) or 
-                                    (i < 24 and np.all(time_series[:i] == 0))):
+        if time_series[i] != 0 and ((np.all(time_series[i-hours_between:i] == 0) and not time_series[i-hours_between:i].empty) or 
+                                    (i < hours_between and np.all(time_series[:i] == 0))):
            
             event_start.append(time_series.index[i])
             start_i = i
             j = i
-        if time_series[i] != 0 and np.all(time_series[i+1:i+25] == 0):
+        if time_series[i] != 0 and np.all(time_series[i+1:i+(hours_between+1)] == 0):
             event_end.append(time_series.index[i])
             end_i = i
             event_total = np.sum(time_series[start_i:end_i+1])
@@ -204,11 +204,11 @@ for i in station_name_list:
         station_data_hourly.to_csv('hourly_rainfalls_'+station_name+'.csv')
         station_data_hourly[station_data_hourly.isnull()] = 0
         
-        s_e_sum = count_and_sum_events(station_data_hourly)
+        s_e_sum = count_and_sum_events(station_data_hourly,4)
         
         sum_events = s_e_sum[0]['accum']
         
-        sum_events_uq_thres = sum_events#np.quantile(sum_events,0.95)
+        sum_events_uq_thres = sum_events#np.quantile(sum_events,0.75)
         
         thres_boolean = sum_events >= sum_events_uq_thres
         
@@ -250,7 +250,7 @@ for i in station_name_list:
         #     ts_selected  = [x for x in filtered_event_total if x['start'].date() == datetime.date(2019,1,14) or 
         #                        x['start'].date() == datetime.date(2019,1,14)]
         if station_name == 'kove':
-            ts_selected  = [x for x in event_id if x['start'].date().year == 2017 and x['start'].date().month == 2]
+            ts_selected  = [x for x in event_id if x['start'].date().year == 2017 and x['start'].date().month == 2] #selecte all events in February 2017
             
             
         
@@ -359,35 +359,36 @@ for i in station_name_list:
         #kove
         # start_date = event_id[32]['start'] 
         # end_date = event_id[32]['end'] 
-        if(plot_full_record):
-            date_filter_cumsum = merged_cumsum
-            date_filter = station_data_hourly
-        else: 
-            station_data_hourly.index = station_data_hourly.index.tz_convert(None)
-            date_filter = station_data_hourly[start_date:end_date]
-            date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
-        # multimodal= 1
-        # for i in filtered_event_total:
-        #     if(plot_full_record):
-        #         date_filter_cumsum = merged_cumsum
-        #     else: 
-        #         date_filter = station_data_hourly[i['start']:i['end']]
-        #         date_filter_cumsum = station_data_hourly[i['start']:i['end']].cumsum()
-        #     fig,ax = plt.subplots(figsize=(40, 20))
-        #     ax.bar(date_filter.index,date_filter,width=0.01)
-        #     #date_filter.plot(kind="bar")
-        #     # ax.set_xticks(np.arange(1,len(date_filter),1))
-        #     # ax.set_xticks(np.arange(1,len(date_filter),5))
-        #     fig.suptitle('Multimodal Event Rainfall at '+station_name.upper() , fontsize=60)
-        #     plt.ylabel('Precipiation (mm)', fontsize=50)
-        #     plt.xlabel('Date', fontsize=50)
-        #     plt.xticks(fontsize=30,rotation=40)
-        #     plt.yticks(fontsize=30)
-        #     ax.grid()
-        #     date_form = DateFormatter("%m-%d-%Y-%H")
-        #     ax.xaxis.set_major_formatter(date_form)
-        #     fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist.png')  
-        #     multimodal = multimodal + 1
+        # if(plot_full_record):
+        #     date_filter_cumsum = merged_cumsum
+        #     date_filter = station_data_hourly
+        # else: 
+        #     station_data_hourly.index = station_data_hourly.index.tz_convert(None)
+        #     date_filter = station_data_hourly[start_date:end_date]
+        #     date_filter_cumsum = station_data_hourly[start_date:end_date].cumsum()
+        multimodal= 1
+        for i in ts_selected:
+            print(multimodal)
+            if(plot_full_record):
+                date_filter_cumsum = merged_cumsum
+            else: 
+                date_filter = station_data_hourly[i['start']:i['end']]
+                date_filter_cumsum = date_filter.cumsum()
+            fig,ax = plt.subplots(figsize=(40, 20))
+            ax.bar(date_filter.index,date_filter,width=0.01)
+            #date_filter.plot(kind="bar")
+            # ax.set_xticks(np.arange(1,len(date_filter),1))
+            # ax.set_xticks(np.arange(1,len(date_filter),5))
+            fig.suptitle('6-hr Defined Pulse Event Rainfall at '+station_name.upper() , fontsize=60)
+            plt.ylabel('Precipiation (mm)', fontsize=50)
+            plt.xlabel('Date', fontsize=50)
+            plt.xticks(fontsize=30,rotation=40)
+            plt.yticks(fontsize=30)
+            ax.grid()
+            date_form = DateFormatter("%m-%d-%Y-%H")
+            ax.xaxis.set_major_formatter(date_form)
+            # fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist_4hr_75.png')  
+            multimodal = multimodal + 1
         fig1,ax1 = plt.subplots(figsize=(20, 12.5))
         ax1.plot(date_filter.index,date_filter)
         fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
@@ -400,7 +401,7 @@ for i in station_name_list:
         ax1.xaxis.set_major_formatter(date_form)
         ax2 = fig1.gca()
         ax2.set_ylim([0, None])
-        fig1.savefig(station_name + '_line.png',dpi=300, bbox_inches = "tight")   
+        # fig1.savefig(station_name + '_line.png',dpi=300, bbox_inches = "tight")   
         
         # fig3,ax3 = plt.subplots(figsize=(100, 60))
         # ax3.grid()
