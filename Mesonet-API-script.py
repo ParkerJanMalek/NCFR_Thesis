@@ -20,6 +20,8 @@ import MRMS_data_pull as MRMS
 # Specify request parameters (as strings)
 token = 'aa31874e86fb42d9b2ea6b293f1bb004' # use your own token
 
+################################FUNCTIONS############################################
+
 def count_and_sum_events(time_series,hours_between):
     event_start = []
     event_end = []
@@ -54,10 +56,6 @@ def find_nearest_value(target, values):
 
     return nearest
 
-#open AR time series
-with open('G:\\NCFR Thesis\\NCFR_Thesis\\AR_California_Landfall.pickle', 'rb') as data:
-    AR_TS = pickle.load(data)
-    
 def myround(x, prec=2, base=.5):
   return round(base * round(float(x)/base),prec)
 
@@ -66,10 +64,10 @@ def data_availability_check(station_name,token,var):
         return(True)
     else:
         return(False)
+    
+####################################################################################
 
 station_name_list =['kove']
-
-station_window = {'kcic':'yfrr','kuki':'yfrr','ksts':'yfrr','kapc':'yfrr','k069':'yfrr','kmyv':'yfrr','kove':'yfrr','kgoo':'yfrr','ko05':'yfrr','ktrk':'yfrr','kblu':'yfrr','kcno':'sa','kl35':'sa','kajo':'sa','kral':'sa'}
 
 var = 'precip_accum_one_hour'
 unit = 'precip|mm'
@@ -142,6 +140,8 @@ for i in station_name_list:
         station_data_hourly.to_csv('hourly_rainfalls_'+station_name+'.csv')
         station_data_hourly[station_data_hourly.isnull()] = 0
         
+        
+        #isolate events to the 
         s_e_sum = count_and_sum_events(station_data_hourly,12)
         
         sum_events = s_e_sum[0]['accum']
