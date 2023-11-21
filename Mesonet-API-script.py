@@ -13,7 +13,15 @@ import os
 import cartopy
 import cartopy.crs as ccrs
 
+
+#radar
+
+
+######
+
+
 import MRMS_data_pull as MRMS
+import Nexrad_S3_Demo as radar 
 
 # stage four quanitiative precipitation (hourly radar product)
 # find the ARs that are colocated
@@ -205,6 +213,10 @@ for i in station_name_list:
             
         multimodal= 1
         for i in ts_selected:
+            
+            def find_dates_for_radar():
+                return([i['start'],i['end']])
+            
             print(multimodal)
             if(plot_full_record):
                 date_filter_cumsum = merged_cumsum
