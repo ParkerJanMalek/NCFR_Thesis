@@ -148,7 +148,7 @@ for i in station_name_list:
         station_data_hourly = station_data_out.resample('60min').mean()
         station_data_hourly.to_csv('hourly_rainfalls_'+station_name+'.csv')
         station_data_hourly[station_data_hourly.isnull()] = 0
-        
+        #station_data_hourly[station_data_hourly <=0.02500] = 0
         
         #isolate events to the 
         s_e_sum = count_and_sum_events(station_data_hourly,12)
@@ -175,7 +175,7 @@ for i in station_name_list:
 
         
         #select Oroville events with greater than 3mm in any hour
-        ts_selected  = [x for x in event_id if x['start'].date().year == 2017 and x['start'].date().month == 2 and any(x['event_rainfall'] >= 3)] #selecte all events in February 2017
+        ts_selected  = [x for x in event_id if x['start'].date().year == 2017 and x['start'].date().month == 2] #selecte all events in February 2017
             
             
         ##############################cumulative precip sums (not used but saved)################################
@@ -208,44 +208,51 @@ for i in station_name_list:
         ###########################################Plotting############################################################
         
         file_var2 = 'GaugeCorr_QPE_01H'
-        outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-        if not os.path.exists(outdirck):
-            MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name)
+        #outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name+'_'+file_var2 + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+        # if not os.path.exists(outdirck):
+        #     MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name)
             
         multimodal= 1
         for i in ts_selected:
+            start_date = i['start']
+            end_date = i['end']
+            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            if os.path.exists(outdirck):
+                shutil.rmtree(outdirck)
+            os.mkdir(outdirck)
             
-            radar.pull_radar(i['start'], i['end'])
-            print(multimodal)
-            if(plot_full_record):
-                date_filter_cumsum = merged_cumsum
-            else: 
-                date_filter = station_data_hourly[i['start']:i['end']]
-                date_filter_cumsum = date_filter.cumsum()
-            fig,ax = plt.subplots(figsize=(40, 20))
-            ax.bar(date_filter.index,date_filter,width=0.01)
-            fig.suptitle('12-hr Defined Pulse Event Rainfall at '+station_name.upper() , fontsize=60)
-            plt.ylabel('Precipiation (mm)', fontsize=50)
-            plt.xlabel('Date', fontsize=50)
-            plt.xticks(fontsize=30,rotation=40)
-            plt.yticks(fontsize=30)
-            ax.grid()
-            date_form = DateFormatter("%m-%d-%Y-%H")
-            ax.xaxis.set_major_formatter(date_form)
-            fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist_12hr.png')  
-            multimodal = multimodal + 1
-        fig1,ax1 = plt.subplots(figsize=(20, 12.5))
-        ax1.plot(date_filter.index,date_filter)
-        fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
-        plt.ylabel('Precipiation (mm)', fontsize=25)
-        plt.xlabel('Date', fontsize=25,labelpad=-0.5)
-        plt.xticks(fontsize=15,rotation=45)
-        plt.yticks(fontsize=15)
-        ax1.grid()
-        date_form = DateFormatter("%m-%d-%Y-%H")
-        ax1.xaxis.set_major_formatter(date_form)
-        ax2 = fig1.gca()
-        ax2.set_ylim([0, None])
+            radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
+            MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
+            # print(i)
+            # if(plot_full_record):
+            #     date_filter_cumsum = merged_cumsum
+            # else: 
+            #     date_filter = station_data_hourly[i['start']:i['end']]
+            #     date_filter_cumsum = date_filter.cumsum()
+            # fig,ax = plt.subplots(figsize=(40, 20))
+            # ax.bar(date_filter.index,date_filter,width=0.01)
+            # fig.suptitle('12-hr Defined Pulse Event Rainfall at '+station_name.upper() , fontsize=60)
+            # plt.ylabel('Precipiation (mm)', fontsize=50)
+            # plt.xlabel('Date', fontsize=50)
+            # plt.xticks(fontsize=30,rotation=40)
+            # plt.yticks(fontsize=30)
+            # ax.grid()
+            # date_form = DateFormatter("%m-%d-%Y-%H")
+            # ax.xaxis.set_major_formatter(date_form)
+            # fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist_12hr.png')  
+            # multimodal = multimodal + 1
+        # fig1,ax1 = plt.subplots(figsize=(20, 12.5))
+        # ax1.plot(date_filter.index,date_filter)
+        # fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
+        # plt.ylabel('Precipiation (mm)', fontsize=25)
+        # plt.xlabel('Date', fontsize=25,labelpad=-0.5)
+        # plt.xticks(fontsize=15,rotation=45)
+        # plt.yticks(fontsize=15)
+        # ax1.grid()
+        # date_form = DateFormatter("%m-%d-%Y-%H")
+        # ax1.xaxis.set_major_formatter(date_form)
+        # ax2 = fig1.gca()
+        # ax2.set_ylim([0, None])
     else:
         print("No data available for " + station_name)
         

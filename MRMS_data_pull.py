@@ -30,8 +30,9 @@ import matplotlib.axes as maxes
 import shutil
 from metpy.io import Level2File
 from metpy.plots import add_timestamp, ctables
+from matplotlib.dates import DayLocator, DateFormatter
 
-def map_event(start_date,end_date,station_lon,station_lat,station_name):
+def map_event(start_date,end_date,station_lon,station_lat,station_name,station_data,ts_selected):
 
     
     #bounding box California
@@ -180,15 +181,26 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name):
         lon = grbs.longitude[lon_ind]
         lon2d, lat2d = np.meshgrid(lon,lat)
         
+        fig = plt.figure(figsize=(60, 60))
+        ax1 = fig.add_subplot(211)
+        date_filter = station_data[ts_selected['start']:ts_selected['end']]
+        ax1.bar(date_filter.index,date_filter,width=0.01)
+        ax1.axvline(x=dt,linewidth=4, color='r')
+        fig.suptitle('test' , fontsize=60)
+        plt.ylabel('Precipiation (mm)', fontsize=50)
+        plt.xlabel('Date', fontsize=50)
+        plt.xticks(fontsize=30,rotation=40)
+        plt.yticks(fontsize=30)
+        ax1.grid()
+        date_form = DateFormatter("%m-%d-%Y-%H")
+        ax1.xaxis.set_major_formatter(date_form)
         
-        
-        fig, ax = plt.subplots(figsize=(20, 20))
-        ax.axis('off')
+        ax1.axis('off')
         
         usemap_proj = ccrs.PlateCarree(central_longitude=180)
         usemap_proj._threshold /= 20.  # to make greatcircle smooth
          
-        ax = plt.axes(projection=usemap_proj)
+        ax = fig.add_subplot(212,projection=usemap_proj)
         # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
         ax.set_extent([min_lon, max_lon, min_lat, max_lat], crs=ccrs.PlateCarree())
          

@@ -27,6 +27,7 @@ import numpy as np
 from dateutil import rrule
 from datetime import datetime, timedelta
 import datetime  as dtetme
+from matplotlib.dates import DayLocator, DateFormatter
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -34,7 +35,7 @@ from pyproj import Geod #this is used to convert range/azimuth to lat/lon
 
 import matplotlib.axes as maxes
 
-def pull_radar(start_date1,end_date1):
+def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
     start_date = dtetme.datetime(start_date1.year,start_date1.month,start_date1.day,start_date1.hour)
     end_date = dtetme.datetime(end_date1.year,end_date1.month,end_date1.day,end_date1.hour)
     print(start_date)
@@ -42,9 +43,8 @@ def pull_radar(start_date1,end_date1):
     s3 = boto3.resource('s3', config=Config(signature_version=botocore.UNSIGNED,
                                             user_agent_extra='Resource'))
     bucket = s3.Bucket('noaa-nexrad-level2')
-    
+    outdir = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
     for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
-        print(rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date))
         month = str(dt.month).zfill(2)
         day = str(dt.day).zfill(2)
         hour = str(dt.hour).zfill(2)
@@ -52,12 +52,25 @@ def pull_radar(start_date1,end_date1):
         # construct a list of days/hours to loop through.
         
         radar_object1 = bucket.objects.filter(Prefix=str(dt.year) + '/' + month + '/' + day + '/KBBX/KBBX'+ str(dt.year) + month + day + '_'+hour) 
-       
         for obj in radar_object1:
-            fig, ax = plt.subplots(figsize=(20, 20))
+            fig = plt.figure(figsize=(60, 60))
+            ax1 = fig.add_subplot(211)
+            #fig, ax = plt.subplots(figsize=(20, 20))
             # Plot the data!
             savestr = obj.key.split("/")[-1]
             print(savestr)
+            date_filter = station_data[ts_selected['start']:ts_selected['end']]
+            ax1.bar(date_filter.index,date_filter,width=0.01)
+            ax1.axvline(x=dt,linewidth=4, color='r')
+            fig.suptitle('test' , fontsize=60)
+            plt.ylabel('Precipiation (mm)', fontsize=50)
+            plt.xlabel('Date', fontsize=50)
+            plt.xticks(fontsize=30,rotation=40)
+            plt.yticks(fontsize=30)
+            ax1.grid()
+            date_form = DateFormatter("%m-%d-%Y-%H")
+            ax1.xaxis.set_major_formatter(date_form)
+            
             
             
             # Use MetPy to read the file
@@ -115,14 +128,15 @@ def pull_radar(start_date1,end_date1):
             ref_norm, ref_cmap = ctables.registry.get_with_steps('NWSReflectivity', 5, 5)
             
             
-            ax.axis('off')
+            
             #ax.set_xticks([])
             #ax.set_yticks([])
             # this declares a recentered projection for Pacific areas
             usemap_proj = ccrs.PlateCarree(central_longitude=180)
             usemap_proj._threshold /= 20.  # to make greatcircle smooth
-             
-            ax = plt.axes(projection=usemap_proj)
+            ax = fig.add_subplot(212,projection=usemap_proj)
+            ax.axis('off')
+            #ax = plt.axes(projection=usemap_proj)
             # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
             ax.set_extent([bot_left_lon, top_right_lon, bot_left_lat, top_right_lat], crs=ccrs.PlateCarree())
              
@@ -199,8 +213,7 @@ def pull_radar(start_date1,end_date1):
             plt.tight_layout()
             plt.show()
            # return(fig)
-            fig.savefig(savestr+".png")
-             
+            fig.savefig(outdir+savestr+".png")
             
         
     
