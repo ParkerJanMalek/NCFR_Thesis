@@ -118,10 +118,6 @@ for metvar in metvars:
     #create subplot for mapping multiple timesteps
     #MAP DESIRED VARIABLE
     # define date of plot
-    import numpy as np
-    from netCDF4 import Dataset
-    import matplotlib.pyplot as plt
-    import cartopy.crs as ccrs
 
     # Read in NetCDF4 file (add a directory path if necessary):
 
@@ -135,14 +131,14 @@ for metvar in metvars:
         ax.set_global()
         
         border_c = '0.4'
-        border_w = 0.4
+        border_w = 12
         ax.coastlines(resolution="110m",linewidth=1)
         ax.gridlines(linestyle='--',color='black')
         ax.add_feature(cfeature.LAND)
         ax.add_feature(cfeature.OCEAN,color="white")
         ax.add_feature(cfeature.COASTLINE)
-        ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=2)
-        ax.add_feature(cfeature.STATES, linestyle=':', zorder=2)
+        ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=3)
+        ax.add_feature(cfeature.STATES, linestyle=':', zorder=3)
         gl = ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
         
         gl.xlabel_style = {'size': 25}
@@ -166,16 +162,16 @@ for metvar in metvars:
         contour_w = 0.7
         lon, lat = np.meshgrid(gridlonreduced,gridlatreduced) 
         
-        colorm = plt.pcolor(lon,lat,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=1)
+        colorm = plt.pcolor(lon,lat,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=2)
+        mp =  plt.contourf(lon, lat, arr, np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']), transform=ccrs.PlateCarree(),cmap=colormap['IVT'],zorder=2)
         mp2 = plt.contour(lon,lat,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
-        mp =  plt.contourf(lon, lat, arr, np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']), transform=ccrs.PlateCarree(),cmap=colormap['IVT'])
-        plt.title('MERRA-2 Air Temperature at 2m, January 2010', size=30)
-        cbar = plt.colorbar(mp,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical',pad=30)
-        cbar.set_label(cbarlabs['IVT'],size=24,rotation=0,labelpad=10)
+        datetitle =  "IVT on 2017-02-07 - " + str(n) +":00 UTC"
+        plt.title(datetitle, size=35)
+        cbar = plt.colorbar(mp,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical',pad=0.08)
+        cbar.set_label(cbarlabs['IVT'],fontsize=20,labelpad=0.5,fontweight='bold')
         cbar.ax.tick_params(labelsize=10)
         plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=5,zorder=4)
-        datetitle =  "IVT on 2017-02-07 - " + str(n) +":00 UTC"
-        ax.set_title(datetitle,pad=32,fontsize=35)
+        #plt.close()
             
 #contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
 # Save the plot as a PNG image
