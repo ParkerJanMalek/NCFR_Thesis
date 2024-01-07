@@ -170,8 +170,8 @@ for metvar in metvars:
         mp2 = plt.contour(lon,lat,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
         mp =  plt.contourf(lon, lat, arr, np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']), transform=ccrs.PlateCarree(),cmap=colormap['IVT'])
         plt.title('MERRA-2 Air Temperature at 2m, January 2010', size=30)
-        cbar = plt.colorbar(mp,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
-        cbar.set_label('K',size=12,rotation=0,labelpad=60)
+        cbar = plt.colorbar(mp,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical',pad=30)
+        cbar.set_label(cbarlabs['IVT'],size=24,rotation=0,labelpad=10)
         cbar.ax.tick_params(labelsize=10)
         plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=5,zorder=4)
         datetitle =  "IVT on 2017-02-07 - " + str(n) +":00 UTC"
