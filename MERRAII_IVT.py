@@ -18,12 +18,20 @@ from matplotlib.colors import ListedColormap
 import matplotlib.cm as cm
 #import matplotlib.transforms as mtransforms
 os.environ["PROJ_LIB"] = os.path.join(os.environ["CONDA_PREFIX"], "share", "proj")
-from mpl_toolkits.basemap import Basemap #installed using 
+#from mpl_toolkits.basemap import Basemap #installed using 
     #conda install -c anaconda basemap
 #import scipy.io
 from datetime import datetime
 import os
 import paramiko
+
+from matplotlib.dates import DayLocator, DateFormatter
+
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+from pyproj import Geod #this is used to convert range/azimuth to lat/lon
+
+import matplotlib.axes as maxes
 
 #"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2.README.pdf D:\PSU Thesis\data\"Research Statement High-Intensity Precipitation.docx
 #"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/Parker/Papers/"Research Statement High-Intensity Precipitation.docx" C:\Users\malekP\
@@ -108,69 +116,157 @@ for metvar in metvars:
     #%% PLOT NODES from MATLAB
     
     #create subplot for mapping multiple timesteps
-    i = 0
     #MAP DESIRED VARIABLE
     # define date of plot
+    import numpy as np
+    from netCDF4 import Dataset
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+
+    # Read in NetCDF4 file (add a directory path if necessary):
+
+    #Start Plotting Data
+    
+    # Plot the data using matplotlib and cartopy
     for n in np.arange(1,24):
-        fig = plt.figure()
-        datetitle =  "IVT on 2017-02-07 - " + str(i+1) +":00 UTC"
-        # reduce merra to desired day
-        arr = merrareduced[n,:,:]
-        #convert lat and lon into a 2D array
-        lon, lat = np.meshgrid(gridlonreduced,gridlatreduced) 
+        # Set the figure size, projection, and extent
+        fig = plt.figure(figsize=(20, 20))
+        ax = plt.axes(projection=ccrs.PlateCarree())
+        ax.set_global()
+        
+        border_c = '0.4'
+        border_w = 0.4
+        ax.coastlines(resolution="110m",linewidth=1)
+        ax.gridlines(linestyle='--',color='black')
+        ax.add_feature(cfeature.LAND)
+        ax.add_feature(cfeature.OCEAN,color="white")
+        ax.add_feature(cfeature.COASTLINE)
+        ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=2)
+        ax.add_feature(cfeature.STATES, linestyle=':', zorder=2)
+        gl = ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+        
+        gl.xlabel_style = {'size': 25}
+        gl.ylabel_style = {'size': 25}
+        # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
+        ax.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
+        
         #define area threshold for basemap
         area_thresh = 1E4
         #create equidistant cylindrical projection basemap
-        map = Basemap(projection='cyl',llcrnrlat=latmin,urcrnrlat=latmax,llcrnrlon=lonmin,\
-                  urcrnrlon=lonmax,resolution='l',area_thresh=area_thresh)
-        xi, yi = map(lon,lat)
-        ax = fig.add_subplot()
-        ax.set_title(datetitle,pad=4,fontsize=12)
-        #ax.set_title('{:%d %b}'.format(datetitle),pad=4,fontsize=12)
-        # sublabel_loc = mtransforms.ScaledTranslation(4/72, -4/72, fig.dpi_scale_trans)
-        # ax.text(0.0, 1.0, extremeevent[i], transform=ax.transAxes + sublabel_loc,
-        #     fontsize=9, fontweight='bold', verticalalignment='top', 
-        #     bbox=dict(facecolor='1', edgecolor='none', pad=1.5),zorder=3)
-        #create colormap of MERRA2 data
-        colorm = map.pcolor(xi,yi,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=1)
         
-        #define border color and thickness
-        border_c = '0.4'
-        border_w = 0.4
-        #create map features
-        map.drawcoastlines(color=border_c, linewidth=border_w)
-        map.drawstates(color=border_c, linewidth=border_w)
-        map.drawcountries(color=border_c, linewidth=border_w)
-        gridlinefont = 8.5
-        parallels = np.arange(20.,71.,20.)
-        meridians = np.arange(-160.,-109.,20.)
-        map.drawparallels(parallels, labels=[1,0,0,0], fontsize=gridlinefont,color=border_c,linewidth=border_w)
-        map.drawmeridians(meridians, labels=[0,0,0,1], fontsize=gridlinefont,color=border_c,linewidth=border_w)
-         #define contour color and thickness
+        # usemap_proj = ccrs.PlateCarree(central_longitude=180)
+        # usemap_proj._threshold /= 20.  # to make greatcircle smooth
+        # ax = fig.add_subplot(212,projection=usemap_proj)
+        # ax.axis('off')
+        #ax = plt.axes(projection=usemap_proj)
+        # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
+        # Set contour levels, then draw the plot and a colorbar
+        arr = merrareduced[n,:,:]
         contour_c = '0.1'
         contour_w = 0.7
-        #create contour map
-        contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
-        plt.clabel(contourm,levels=contourm.levels[::2],fontsize=6,inline_spacing=1,colors='k',zorder=2,manual=False)
+        lon, lat = np.meshgrid(gridlonreduced,gridlatreduced) 
+        
+        colorm = plt.pcolor(lon,lat,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=1)
+        mp2 = plt.contour(lon,lat,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
+        mp =  plt.contourf(lon, lat, arr, np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']), transform=ccrs.PlateCarree(),cmap=colormap['IVT'])
+        plt.title('MERRA-2 Air Temperature at 2m, January 2010', size=30)
+        cbar = plt.colorbar(mp,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
+        cbar.set_label('K',size=12,rotation=0,labelpad=60)
+        cbar.ax.tick_params(labelsize=10)
+        plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=5,zorder=4)
+        datetitle =  "IVT on 2017-02-07 - " + str(n) +":00 UTC"
+        ax.set_title(datetitle,pad=32,fontsize=35)
             
-        #add yuba shape
-        #map.readshapefile(os.path.join(ws_directory,f'{watershed}'), watershed,linewidth=0.8,color='r')
-        plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=0.7,zorder=4)
-        #cbar_ax = fig.add_axes([0.9,0.05,0.025,0.88]) #bottom colorbar
-        cbar = fig.colorbar(colorm,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
-        cbar.ax.tick_params(labelsize=8)
-        cbar.set_label(cbarlabs['IVT'],fontsize=8.5,labelpad=0.5,fontweight='bold')
+#contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
+# Save the plot as a PNG image
+
+#fig.savefig('MERRA2_t2m.png', format='png', dpi=360)
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+    # for n in np.arange(1,24):
+    #     fig = plt.figure()
+    #     datetitle =  "IVT on 2017-02-07 - " + str(i+1) +":00 UTC"
+    #     # reduce merra to desired day
+    #     arr = merrareduced[1,:,:]
+    #     #convert lat and lon into a 2D array
+    #     lon, lat = np.meshgrid(gridlonreduced,gridlatreduced) 
+      
+    #     geodetic = ccrs.Geodetic()
+    #     plate_carree = ccrs.PlateCarree(central_longitude=180)
+         
+        
+        
+    #     map = Basemap(projection='cyl',llcrnrlat=latmin,urcrnrlat=latmax,llcrnrlon=lonmin,\
+    #               urcrnrlon=lonmax,resolution='l',area_thresh=area_thresh)
+    #     xi, yi = map(lon,lat)
+    #     ax = fig.add_subplot()
+    #     ax.set_title(datetitle,pad=4,fontsize=12)
+    #     #ax.set_title('{:%d %b}'.format(datetitle),pad=4,fontsize=12)
+    #     # sublabel_loc = mtransforms.ScaledTranslation(4/72, -4/72, fig.dpi_scale_trans)
+    #     # ax.text(0.0, 1.0, extremeevent[i], transform=ax.transAxes + sublabel_loc,
+    #     #     fontsize=9, fontweight='bold', verticalalignment='top', 
+    #     #     bbox=dict(facecolor='1', edgecolor='none', pad=1.5),zorder=3)
+    #     #create colormap of MERRA2 data
+    #     colorm = map.pcolor(xi,yi,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=1)
+        
+    #     #define border color and thickness
+    #     border_c = '0.4'
+    #     border_w = 0.4
+    #     #create map features
+    #     map.drawcoastlines(color=border_c, linewidth=border_w)
+    #     map.drawstates(color=border_c, linewidth=border_w)
+    #     map.drawcountries(color=border_c, linewidth=border_w)
+    #     gridlinefont = 8.5
+    #     parallels = np.arange(20.,71.,20.)
+    #     meridians = np.arange(-160.,-109.,20.)
+    #     map.drawparallels(parallels, labels=[1,0,0,0], fontsize=gridlinefont,color=border_c,linewidth=border_w)
+    #     map.drawmeridians(meridians, labels=[0,0,0,1], fontsize=gridlinefont,color=border_c,linewidth=border_w)
+    #       #define contour color and thickness
+    #     contour_c = '0.1'
+    #     contour_w = 0.7
+    #     #create contour map
+    #     contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
+    #     plt.clabel(contourm,levels=contourm.levels[::2],fontsize=6,inline_spacing=1,colors='k',zorder=2,manual=False)
             
-        # #CUSTOMIZE SUBPLOT SPACING
-        # fig.subplots_adjust(left=0.05,right=0.89,bottom=0.021, top=0.955,hspace=0.05, wspace=0.05) #bottom colorbar
-        # #fig.add_axis([left,bottom, width,height])
-        # cbar_ax = fig.add_axes([0.9,0.05,0.025,0.88]) #bottom colorbar
-        # cbar = fig.colorbar(colorm, cax=cbar_ax,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
-        # cbar.ax.tick_params(labelsize=8)
-        # cbar.set_label(cbarlabs['IVT'],fontsize=8.5,labelpad=0.5,fontweight='bold')
+    #     #add yuba shape
+    #     #map.readshapefile(os.path.join(ws_directory,f'{watershed}'), watershed,linewidth=0.8,color='r')
+    #     plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=0.7,zorder=4)
+    #     #cbar_ax = fig.add_axes([0.9,0.05,0.025,0.88]) #bottom colorbar
+    #     cbar = fig.colorbar(colorm,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
+    #     cbar.ax.tick_params(labelsize=8)
+    #     cbar.set_label(cbarlabs['IVT'],fontsize=8.5,labelpad=0.5,fontweight='bold')
+            
+    #     # #CUSTOMIZE SUBPLOT SPACING
+    #     # fig.subplots_adjust(left=0.05,right=0.89,bottom=0.021, top=0.955,hspace=0.05, wspace=0.05) #bottom colorbar
+    #     # #fig.add_axis([left,bottom, width,height])
+    #     # cbar_ax = fig.add_axes([0.9,0.05,0.025,0.88]) #bottom colorbar
+    #     # cbar = fig.colorbar(colorm, cax=cbar_ax,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical')
+    #     # cbar.ax.tick_params(labelsize=8)
+    #     # cbar.set_label(cbarlabs['IVT'],fontsize=8.5,labelpad=0.5,fontweight='bold')
         
             
-        #SHOW MAP
-        fig.savefig("G:\\NCFR Thesis\\NCFR_Thesis\\IVT-2017-02-03 "+str(i+1)+".png",dpi=300)
-        i = i+1
-        plt.show()
+    #     #SHOW MAP
+    #     fig.savefig("G:\\NCFR Thesis\\NCFR_Thesis\\IVT-2017-02-03 "+str(i+1)+".png",dpi=300)
+    #     i = i+1
+    #     plt.show()
