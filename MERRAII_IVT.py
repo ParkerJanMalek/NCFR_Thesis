@@ -33,157 +33,202 @@ from pyproj import Geod #this is used to convert range/azimuth to lat/lon
 
 import matplotlib.axes as maxes
 
-#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2.README.pdf D:\PSU Thesis\data\"Research Statement High-Intensity Precipitation.docx
-#"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/Parker/Papers/"Research Statement High-Intensity Precipitation.docx" C:\Users\malekP\
-#%% IMPORT EXTREME DAYS DATA
-# change directory and import SOM data from .mat file
-#mat_dir='I:\\Emma\\FIROWatersheds\\Data\\SOMs\\SomOutput'
-# define lat, lon region of data for plotting
-latmin, latmax = (15.5,65.5)
-lonmin, lonmax = (-170.25,-105.75)
+from dateutil import rrule
+import datetime  as dtetme
 
-
-#%% IMPORT MERRA2 DATA
-# define metvar
-metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAnom']
-metvars = ['IVT']
-#metvar = '300W'
-for metvar in metvars:
-    filepath = "G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_400.tavg1_2d_int_Nx.20170207.SUB.nc"
-
-    #COLLECT VARIABLE DATA FROM MERRA2 FILE
-    merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
-    #open the netcdf file in read mode
-    gridfile = nc.Dataset(filepath,mode='r')
-    print(gridfile)
-    gridlat = gridfile.variables['lat'][:]
-    gridlon = gridfile.variables['lon'][:]
-    if metvar == 'IVT':
-        Uvapor = gridfile.variables['UFLXQV'][:]
-        Vvapor = gridfile.variables['VFLXQV'][:]
-        merra = np.sqrt(Uvapor**2 + Vvapor**2)
-    gridfile.close()
-    
-    merra = np.squeeze(merra)
-    
-   
-    #%% REDUCE LAT AND LON TO DESIRED AREA
-    
-    #REDUCE VARIABLES TO DESIRED AREA
-    #reduce lat
-    latlims = np.logical_and(gridlat > latmin, gridlat < latmax)
-    latind = np.where(latlims)[0]
-    gridlatreduced = gridlat[latind]
-    #reduce lon
-    lonlims = np.logical_and(gridlon > lonmin, gridlon < lonmax)
-    lonind = np.where(lonlims)[0]
-    gridlonreduced = gridlon[lonind]
-    #reduce pressure
-    merrareduced = merra[:,latind,:]
-    merrareduced = merrareduced[:,:,lonind]
-    
-    #print(np.amin(merrareduced),np.amax(merrareduced))
+def pull_merra(start_date1,end_date1,station_data,ts_selected,station_name):
+    start_date = dtetme.datetime(start_date1.year,start_date1.month,start_date1.day,start_date1.hour)
+    end_date = dtetme.datetime(end_date1.year,end_date1.month,end_date1.day,end_date1.hour)
+    #"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2.README.pdf D:\PSU Thesis\data\"Research Statement High-Intensity Precipitation.docx
+    #"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/Parker/Papers/"Research Statement High-Intensity Precipitation.docx" C:\Users\malekP\
+    #%% IMPORT EXTREME DAYS DATA
+    # change directory and import SOM data from .mat file
+    #mat_dir='I:\\Emma\\FIROWatersheds\\Data\\SOMs\\SomOutput'
+    # define lat, lon region of data for plotting
+    latmin, latmax = (15.5,65.5)
+    lonmin, lonmax = (-170.25,-105.75)
     
     
-    #%% CREATE ANOMALY MAP 
-    #GENERATE CUSTOM COLORMAP
-    def center_colormap(lowlim, highlim, center=0):
-        dv = max(-lowlim, highlim) * 2
-        N = int(256 * dv / (highlim-lowlim))
-        bwr = cm.get_cmap('seismic', N)
-        newcolors = bwr(np.linspace(0, 1, N))
-        beg = int((dv / 2 + lowlim)*N / dv)
-        end = N - int((dv / 2 - highlim)*N / dv)
-        newmap = ListedColormap(newcolors[beg:end])
-        return newmap
-    
-    #%% DEFINE PLOTTING VARIABLES
-
-    lowanom, highanom = (-1.3, 1.2)
-    newmap = center_colormap(lowanom, highanom, center=0)
-    lowlims = {'Z500':2850,'SLP':985,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAnom':lowanom}
-    highlims = {'Z500':5700,'SLP':1022,'IVT':1212,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAnom':highanom}
-    
-    contourstart = {'Z500':3000,'SLP':990,'IVT':0,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAnom':-1.2}
-    contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAnom':0.15}
-    
-    cbarstart = {'Z500':3000,'SLP':990,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAnom':-1.2}
-    cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAnom':0.3}
-    
-    colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':newmap,'Z850':'turbo','SLPAnom':newmap,'850TAnom':newmap}
-    cbarlabs = {'Z500':'m','SLP':'hPa','IVT':'kg $\mathregular{m^{-1}}$ $\mathregular{s^{-1}}$','300W':'m/s','850T':'K','Z500Anom':r'$\mathbf{\sigma}$','Z850':'m','SLPAnom':r'$\mathbf{\sigma}$','850TAnom':r'$\mathbf{\sigma}$'}
-    plottitle = {'Z500':'Z500','SLP':'SLP','IVT':'IVT','300W':'300 hPa Wind','850T':'850 hPa Temperature','Z500Anom':'Z500 Anomaly','Z850':'Z850','SLPAnom':'SLP Anomaly','850TAnom':'850 hPa Temperature Anomaly'}
-    #%% PLOT NODES from MATLAB
-    
-    #create subplot for mapping multiple timesteps
-    #MAP DESIRED VARIABLE
-    # define date of plot
-
-    # Read in NetCDF4 file (add a directory path if necessary):
-
-    #Start Plotting Data
-    
-    # Plot the data using matplotlib and cartopy
-    for n in np.arange(1,24):
-        # Set the figure size, projection, and extent
-        fig = plt.figure(figsize=(20, 20))
-        ax = plt.axes(projection=ccrs.PlateCarree())
-        ax.set_global()
+    #%% IMPORT MERRA2 DATA
+    # define metvar
+    metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAnom']
+    metvars = ['IVT']#]
+    #metvar = '300W'
+    for metvar in metvars:
+        filepath = "G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_400.tavg1_2d_int_Nx.20170207.SUB.nc"
+        filepath2 = "G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_.tavg1_2d_slv_Nx.20170207.SUB.nc4"
+        filepath3 = "G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_400.tavg1_2d_slv_Nx.20170207.SUB.nc"
+        #COLLECT VARIABLE DATA FROM MERRA2 FILE
+        merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
+        #open the netcdf file in read mode
+        gridfile = nc.Dataset(filepath3,mode='r')
+        print(gridfile)
+        gridlat = gridfile.variables['lat'][:]
+        gridlon = gridfile.variables['lon'][:]
+        if metvar == 'IVT':
+            Uvapor = gridfile.variables['UFLXQV'][:]
+            Vvapor = gridfile.variables['VFLXQV'][:]
+            merra = np.sqrt(Uvapor**2 + Vvapor**2)
+        # elif metvar == '850T': #temperature advection
+        #     UT = gridfile.variables['U850'][:]
+        #     VT = gridfile.variables['V850'][:]
+        #     T = gridfile.variables['T850'][:]
+        #     merra = np.sqrt(Uvapor**2 + Vvapor**2)
+        gridfile.close()
         
-        border_c = '0.4'
-        border_w = 12
-        ax.coastlines(resolution="110m",linewidth=1)
-        ax.gridlines(linestyle='--',color='black')
-        ax.add_feature(cfeature.LAND)
-        ax.add_feature(cfeature.OCEAN,color="white")
-        ax.add_feature(cfeature.COASTLINE)
-        ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=3)
-        ax.add_feature(cfeature.STATES, linestyle=':', zorder=3)
-        gl = ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+        merra = np.squeeze(merra)
         
-        gl.xlabel_style = {'size': 25}
-        gl.ylabel_style = {'size': 25}
-        # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
-        ax.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
+       
+        #%% REDUCE LAT AND LON TO DESIRED AREA
         
-        #define area threshold for basemap
-        area_thresh = 1E4
-        #create equidistant cylindrical projection basemap
+        #REDUCE VARIABLES TO DESIRED AREA
+        #reduce lat
+        latlims = np.logical_and(gridlat > latmin, gridlat < latmax)
+        latind = np.where(latlims)[0]
+        gridlatreduced = gridlat[latind]
+        #reduce lon
+        lonlims = np.logical_and(gridlon > lonmin, gridlon < lonmax)
+        lonind = np.where(lonlims)[0]
+        gridlonreduced = gridlon[lonind]
+        #reduce pressure
+        merrareduced = merra[:,latind,:]
+        merrareduced = merrareduced[:,:,lonind]
         
-        # usemap_proj = ccrs.PlateCarree(central_longitude=180)
-        # usemap_proj._threshold /= 20.  # to make greatcircle smooth
-        # ax = fig.add_subplot(212,projection=usemap_proj)
-        # ax.axis('off')
-        #ax = plt.axes(projection=usemap_proj)
-        # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
-        # Set contour levels, then draw the plot and a colorbar
-        arr = merrareduced[n,:,:]
-        contour_c = '0.1'
-        contour_w = 0.7
-        lon, lat = np.meshgrid(gridlonreduced,gridlatreduced) 
+        #print(np.amin(merrareduced),np.amax(merrareduced))
         
-        colorm = plt.pcolor(lon,lat,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=2)
-        mp =  plt.contourf(lon, lat, arr, np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']), transform=ccrs.PlateCarree(),cmap=colormap['IVT'],zorder=2)
-        mp2 = plt.contour(lon,lat,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
-        datetitle =  "IVT on 2017-02-07 - " + str(n) +":00 UTC"
-        plt.title(datetitle, size=35)
-        cbar = plt.colorbar(mp,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical',pad=0.08)
-        cbar.set_label(cbarlabs['IVT'],fontsize=20,labelpad=0.5,fontweight='bold')
-        cbar.ax.tick_params(labelsize=10)
-        plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=5,zorder=4)
-        #plt.close()
+        
+        #%% CREATE ANOMALY MAP 
+        #GENERATE CUSTOM COLORMAP
+        def center_colormap(lowlim, highlim, center=0):
+            dv = max(-lowlim, highlim) * 2
+            N = int(256 * dv / (highlim-lowlim))
+            bwr = cm.get_cmap('seismic', N)
+            newcolors = bwr(np.linspace(0, 1, N))
+            beg = int((dv / 2 + lowlim)*N / dv)
+            end = N - int((dv / 2 - highlim)*N / dv)
+            newmap = ListedColormap(newcolors[beg:end])
+            return newmap
+        
+        #%% DEFINE PLOTTING VARIABLES
+    
+        lowanom, highanom = (-1.3, 1.2)
+        newmap = center_colormap(lowanom, highanom, center=0)
+        lowlims = {'Z500':2850,'SLP':985,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAnom':lowanom}
+        highlims = {'Z500':5700,'SLP':1022,'IVT':1212,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAnom':highanom}
+        
+        contourstart = {'Z500':3000,'SLP':990,'IVT':0,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAnom':-1.2}
+        contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAnom':0.15}
+        
+        cbarstart = {'Z500':3000,'SLP':990,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAnom':-1.2}
+        cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAnom':0.3}
+        
+        colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':newmap,'Z850':'turbo','SLPAnom':newmap,'850TAnom':newmap}
+        cbarlabs = {'Z500':'m','SLP':'hPa','IVT':'kg $\mathregular{m^{-1}}$ $\mathregular{s^{-1}}$','300W':'m/s','850T':'K','Z500Anom':r'$\mathbf{\sigma}$','Z850':'m','SLPAnom':r'$\mathbf{\sigma}$','850TAnom':r'$\mathbf{\sigma}$'}
+        plottitle = {'Z500':'Z500','SLP':'SLP','IVT':'IVT','300W':'300 hPa Wind','850T':'850 hPa Temperature','Z500Anom':'Z500 Anomaly','Z850':'Z850','SLPAnom':'SLP Anomaly','850TAnom':'850 hPa Temperature Anomaly'}
+        #%% PLOT NODES from MATLAB
+        
+        #create subplot for mapping multiple timesteps
+        #MAP DESIRED VARIABLE
+        # define date of plot
+    
+        # Read in NetCDF4 file (add a directory path if necessary):
+    
+        #Start Plotting Data
+        
+        # Plot the data using matplotlib and cartopy
+        n=1 #testing
+        for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
+        #for n in np.arange(1,24):
             
-#contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
-# Save the plot as a PNG image
-
-#fig.savefig('MERRA2_t2m.png', format='png', dpi=360)
- 
-
-
-
-
-
-
+            
+            datetitle =  "IVT on " + str(dt.year)+"-"+str(dt.month)+"-"+str(dt.day)+ "-" + str(dt.hour) +":00 UTC"
+            
+            # Set the figure size, projection, and extent
+            fig = plt.figure(figsize=(20, 20))
+            
+            
+            
+            ax1 = fig.add_subplot(211)
+            #fig, ax = plt.subplots(figsize=(20, 20))
+            # Plot the data!
+            date_filter = station_data[ts_selected['start']:ts_selected['end']]
+            ax1.bar(date_filter.index,date_filter,width=0.01)
+            ax1.axvline(x=dt,linewidth=4, color='r')
+            fig.suptitle(datetitle , fontsize=40)
+            plt.ylabel('Precipiation (mm)', fontsize=25)
+            plt.xlabel('Date', fontsize=15)
+            plt.xticks(fontsize=15,rotation=40)
+            plt.yticks(fontsize=15)
+            ax1.grid()
+            date_form = DateFormatter("%m-%d-%Y-%H")
+            ax1.xaxis.set_major_formatter(date_form)
+            
+            
+            
+            
+            
+            
+            
+            usemap_proj = ccrs.PlateCarree(central_longitude=180)
+            usemap_proj._threshold /= 20.  # to make greatcircle smooth
+            
+            ax2 = fig.add_subplot(212,projection=usemap_proj)
+            ax2.set_global()
+            
+            border_c = '0.4'
+            border_w = 12
+            ax2.coastlines(resolution="110m",linewidth=1)
+            ax2.gridlines(linestyle='--',color='black')
+            ax2.add_feature(cfeature.LAND)
+            ax2.add_feature(cfeature.OCEAN,color="white")
+            ax2.add_feature(cfeature.COASTLINE)
+            ax2.add_feature(cfeature.BORDERS, linestyle=':', zorder=3)
+            ax2.add_feature(cfeature.STATES, linestyle=':', zorder=3)
+            gl = ax2.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+            
+            gl.xlabel_style = {'size': 25}
+            gl.ylabel_style = {'size': 25}
+            # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
+            ax2.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
+            
+            #define area threshold for basemap
+            area_thresh = 1E4
+            #create equidistant cylindrical projection basemap
+            
+            # usemap_proj = ccrs.PlateCarree(central_longitude=180)
+            # usemap_proj._threshold /= 20.  # to make greatcircle smooth
+            # ax = fig.add_subplot(212,projection=usemap_proj)
+            # ax.axis('off')
+            #ax = plt.axes(projection=usemap_proj)
+            # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
+            # Set contour levels, then draw the plot and a colorbar
+            arr = merrareduced[n,:,:]
+            n=n+1
+            contour_c = '0.1'
+            contour_w = 0.7
+            lon, lat = np.meshgrid(gridlonreduced,gridlatreduced) 
+            
+            colorm = plt.pcolor(lon,lat,arr,shading='auto',cmap=colormap['IVT'],vmin=lowlims['IVT'],vmax=highlims['IVT'],zorder=2)
+            mp =  plt.contourf(lon, lat, arr, np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']), transform=ccrs.PlateCarree(),cmap=colormap['IVT'],zorder=2)
+            mp2 = plt.contour(lon,lat,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
+            #datetitle =  "IVT on 2017-02-07 - " + str(n) +":00 UTC"
+            cbar = plt.colorbar(mp,ticks=np.arange(cbarstart['IVT'],highlims['IVT']+1,cbarint['IVT']),orientation='vertical',pad=0.08)
+            cbar.set_label(cbarlabs['IVT'],fontsize=20,labelpad=0.5,fontweight='bold')
+            cbar.ax.tick_params(labelsize=20)
+            plt.scatter(-120.9,39.5,color='r',marker='*',linewidths=5,zorder=4)
+            #plt.close()
+                
+    #contourm = map.contour(xi,yi,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart['IVT'],highlims['IVT']+1,contourint['IVT']),zorder=2)
+    # Save the plot as a PNG image
+    
+    #fig.savefig('MERRA2_t2m.png', format='png', dpi=360)
+     
+    
+    
+    
+    
+    
+    
 
 
 

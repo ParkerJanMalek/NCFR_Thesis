@@ -22,6 +22,7 @@ import cartopy.crs as ccrs
 
 import MRMS_data_pull as MRMS
 import Nexrad_S3_Demo as radar
+import MERRAII_IVT as merra
 
 
 # stage four quanitiative precipitation (hourly radar product)
@@ -213,6 +214,7 @@ for i in station_name_list:
         #     MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name)
             
         multimodal= 1
+        ts_selected_isolate = ts_selected[0:5]
         for i in ts_selected:
             start_date = i['start']
             end_date = i['end']
@@ -220,9 +222,9 @@ for i in station_name_list:
             if os.path.exists(outdirck):
                 shutil.rmtree(outdirck)
             os.mkdir(outdirck)
-            
+            merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name)
             radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
-            MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
+            #MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
             # print(i)
             # if(plot_full_record):
             #     date_filter_cumsum = merged_cumsum

@@ -53,24 +53,25 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
         
         radar_object1 = bucket.objects.filter(Prefix=str(dt.year) + '/' + month + '/' + day + '/KBBX/KBBX'+ str(dt.year) + month + day + '_'+hour) 
         for obj in radar_object1:
-            fig = plt.figure(figsize=(60, 60))
-            ax1 = fig.add_subplot(211)
+            fig = plt.figure(figsize=(20, 20))
             #fig, ax = plt.subplots(figsize=(20, 20))
             # Plot the data!
             savestr = obj.key.split("/")[-1]
             print(savestr)
+            ax1 = fig.add_subplot(211)
+            #fig, ax = plt.subplots(figsize=(20, 20))
+            # Plot the data!
             date_filter = station_data[ts_selected['start']:ts_selected['end']]
             ax1.bar(date_filter.index,date_filter,width=0.01)
             ax1.axvline(x=dt,linewidth=4, color='r')
-            fig.suptitle('test' , fontsize=60)
-            plt.ylabel('Precipiation (mm)', fontsize=50)
-            plt.xlabel('Date', fontsize=50)
-            plt.xticks(fontsize=30,rotation=40)
-            plt.yticks(fontsize=30)
+            fig.suptitle('test' , fontsize=40)
+            plt.ylabel('Precipiation (mm)', fontsize=25)
+            plt.xlabel('Date', fontsize=15)
+            plt.xticks(fontsize=15,rotation=40)
+            plt.yticks(fontsize=15)
             ax1.grid()
             date_form = DateFormatter("%m-%d-%Y-%H")
             ax1.xaxis.set_major_formatter(date_form)
-            
             
             
             # Use MetPy to read the file
@@ -192,13 +193,13 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
             divider = make_axes_locatable(ax)
              
             cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=0.05)
-            cbar = fig.colorbar(a, cax=cax, orientation='vertical')
-            cbar.set_label(label=lbl,size=35)
-            cbar.ax.tick_params(labelsize=35)
-            plt.setp(ax.get_xticklabels(), fontsize=35)
-            plt.setp(ax.get_yticklabels(), fontsize=35)
-            ax.tick_params(axis='x', labelsize=35)
-            ax.tick_params(axis='y', labelsize=35)
+            cbar = fig.colorbar(a, cax=cax, orientation='vertical',pad=0.08)
+            cbar.set_label(label=lbl,size=20)
+            cbar.ax.tick_params(labelsize=20)
+            plt.setp(ax.get_xticklabels(), fontsize=20)
+            plt.setp(ax.get_yticklabels(), fontsize=20)
+            ax.tick_params(axis='x', labelsize=20)
+            ax.tick_params(axis='y', labelsize=20)
             #ax.set_aspect('equal', 'datalim')
             # ax.set_xlim(-100, 100)
             # ax.set_ylim(-100, 100)
@@ -209,7 +210,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
             # fig.savefig(savestr+".png")
             # i=i+1
             ax.spines['right'].set_visible(False)
-            plt.suptitle(savestr[0:4]+' Level 2 Data '+ savestr.split("_")[0][4:]+" "+savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4] +" UTC", fontsize=50)
+            plt.suptitle(savestr[0:4]+' Level 2 Data '+ savestr.split("_")[0][4:]+" "+savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4] +" UTC", fontsize=25)
             plt.tight_layout()
             plt.show()
            # return(fig)
