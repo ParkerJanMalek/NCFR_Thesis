@@ -43,7 +43,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
     s3 = boto3.resource('s3', config=Config(signature_version=botocore.UNSIGNED,
                                             user_agent_extra='Resource'))
     bucket = s3.Bucket('noaa-nexrad-level2')
-    outdir = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+    outdir = 'G:\\NCFR Thesis\\NCFR_Thesis\\Radar_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
     for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         month = str(dt.month).zfill(2)
         day = str(dt.day).zfill(2)
@@ -64,9 +64,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
             date_filter = station_data[ts_selected['start']:ts_selected['end']]
             ax1.bar(date_filter.index,date_filter,width=0.01)
             ax1.axvline(x=dt,linewidth=4, color='r')
-            fig.suptitle('test' , fontsize=40)
             plt.ylabel('Precipiation (mm)', fontsize=25)
-            plt.xlabel('Date', fontsize=15)
             plt.xticks(fontsize=15,rotation=40)
             plt.yticks(fontsize=15)
             ax1.grid()
@@ -153,7 +151,8 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
             ax.add_feature(cfeature.STATES, linestyle=':', zorder=2)
                # plot grid lines
             gl = ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
-            
+            gl.top_labels = False
+            gl.right_labels = False
             gl.xlabel_style = {'size': 25}
             gl.ylabel_style = {'size': 25}
             # for var_data, colors, lbl in zip((ref),
@@ -192,9 +191,9 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
              
             divider = make_axes_locatable(ax)
              
-            cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=0.05)
+            cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=1.05)
             cbar = fig.colorbar(a, cax=cax, orientation='vertical',pad=0.08)
-            cbar.set_label(label=lbl,size=20)
+            cbar.set_label(label=lbl,size=20,labelpad=0.5)
             cbar.ax.tick_params(labelsize=20)
             plt.setp(ax.get_xticklabels(), fontsize=20)
             plt.setp(ax.get_yticklabels(), fontsize=20)
@@ -209,8 +208,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
             # plt.show()
             # fig.savefig(savestr+".png")
             # i=i+1
-            ax.spines['right'].set_visible(False)
-            plt.suptitle(savestr[0:4]+' Level 2 Data '+ savestr.split("_")[0][4:]+" "+savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4] +" UTC", fontsize=25)
+            ax1.set_title('Nexrad Level 2 Radar Data '+ savestr.split("_")[0][4:]+" "+savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4] +" UTC", fontsize=40)
             plt.tight_layout()
             plt.show()
            # return(fig)

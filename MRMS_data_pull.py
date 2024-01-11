@@ -181,21 +181,20 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name,station_d
         lon = grbs.longitude[lon_ind]
         lon2d, lat2d = np.meshgrid(lon,lat)
         
-        fig = plt.figure(figsize=(60, 60))
+        fig = plt.figure(figsize=(20, 20))
         ax1 = fig.add_subplot(211)
+        #fig, ax = plt.subplots(figsize=(20, 20))
+        # Plot the data!
         date_filter = station_data[ts_selected['start']:ts_selected['end']]
         ax1.bar(date_filter.index,date_filter,width=0.01)
         ax1.axvline(x=dt,linewidth=4, color='r')
-        fig.suptitle('test' , fontsize=60)
-        plt.ylabel('Precipiation (mm)', fontsize=50)
-        plt.xlabel('Date', fontsize=50)
-        plt.xticks(fontsize=30,rotation=40)
-        plt.yticks(fontsize=30)
+        plt.ylabel('Precipiation (mm)', fontsize=30)
+        plt.xticks(fontsize=15,rotation=40)
+        plt.yticks(fontsize=15)
         ax1.grid()
         date_form = DateFormatter("%m-%d-%Y-%H")
         ax1.xaxis.set_major_formatter(date_form)
-        
-        ax1.axis('off')
+    
         
         usemap_proj = ccrs.PlateCarree(central_longitude=180)
         usemap_proj._threshold /= 20.  # to make greatcircle smooth
@@ -216,13 +215,14 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name,station_d
         gl=ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
         gl.xlabel_style = {'size': 25}
         gl.ylabel_style = {'size': 25}
-        
+        gl.top_labels = False
+        gl.right_labels = False
         cm = ax.contourf(lon2d, lat2d, ca_values,clevs,cmap=cmap_smooth,
                          transform=ccrs.PlateCarree(), zorder=1)
-        ax.plot(station_lon,station_lat,marker='o', color='red', markersize=20, transform=ccrs.PlateCarree())
+        ax.plot(station_lon,station_lat,marker='o', color='red', markersize=25, transform=ccrs.PlateCarree())
         
-        ax.tick_params(axis='x', labelsize=35)
-        ax.tick_params(axis='y', labelsize=35)
+        # ax.tick_params(axis='x', labelsize=35)
+        # ax.tick_params(axis='y', labelsize=35)
         norm1 = mcolors.Normalize(vmin=0, vmax=1)
         # colorbar and labels
         # divider = make_axes_locatable(ax)
@@ -235,14 +235,14 @@ def map_event(start_date,end_date,station_lon,station_lat,station_name,station_d
             
         cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=0.05)
         cbar = plt.colorbar(cm, cax=cax, orientation='vertical')
-        cbar.set_label(label='mm',size=35)
-        cbar.ax.tick_params(labelsize=35)
-        plt.setp(ax.get_xticklabels(), fontsize=35)
-        plt.setp(ax.get_yticklabels(), fontsize=35)
-        ax.tick_params(axis='x', labelsize=35)
-        ax.tick_params(axis='y', labelsize=35)
+        cbar.set_label(label='mm',size=20)
+        cbar.ax.tick_params(labelsize=20)
+        plt.setp(ax.get_xticklabels(), fontsize=20)
+        plt.setp(ax.get_yticklabels(), fontsize=20)
+        ax.tick_params(axis='x', labelsize=20)
+        ax.tick_params(axis='y', labelsize=20)
         
-        plt.suptitle('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+" - "+str(hour) + ":00 UTC", fontsize=50)
+        ax1.set_title('Gauge-Corrected QPE '+str(dt.year)+str(month)+str(day)+" - "+str(hour) + ":00 UTC", fontsize=40)
         plt.tight_layout()
         plt.show()
         

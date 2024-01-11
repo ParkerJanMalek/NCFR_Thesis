@@ -214,34 +214,38 @@ for i in station_name_list:
         #     MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name)
             
         multimodal= 1
+        ts_selected[1]['start'] = pd.Timestamp('2017-2-6-22',tz='UTC')
         ts_selected_isolate = ts_selected[0:5]
-        for i in ts_selected:
+        tt=[ts_selected_isolate[1]]
+        for i in ts_selected_isolate:
             start_date = i['start']
             end_date = i['end']
-            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\IVT_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
             if os.path.exists(outdirck):
                 shutil.rmtree(outdirck)
             os.mkdir(outdirck)
-            merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name)
+            merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name,station_lon,station_lat)
+            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\Radar_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            if os.path.exists(outdirck):
+                shutil.rmtree(outdirck)
+            os.mkdir(outdirck)
             radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
-            #MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
+            MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
             # print(i)
-            # if(plot_full_record):
-            #     date_filter_cumsum = merged_cumsum
-            # else: 
-            #     date_filter = station_data_hourly[i['start']:i['end']]
-            #     date_filter_cumsum = date_filter.cumsum()
+            # date_filter = station_data_hourly[i['start']:i['end']]
+            # date_filter_cumsum = date_filter.cumsum()
             # fig,ax = plt.subplots(figsize=(40, 20))
             # ax.bar(date_filter.index,date_filter,width=0.01)
-            # fig.suptitle('12-hr Defined Pulse Event Rainfall at '+station_name.upper() , fontsize=60)
+            # ax.set_title('Synoptic Rainfall Pulse Event at Oroville Municipal Airport' , fontsize=60)
             # plt.ylabel('Precipiation (mm)', fontsize=50)
             # plt.xlabel('Date', fontsize=50)
-            # plt.xticks(fontsize=30,rotation=40)
-            # plt.yticks(fontsize=30)
+            # plt.xticks(fontsize=35,rotation=40)
+            # plt.yticks(fontsize=35)
             # ax.grid()
             # date_form = DateFormatter("%m-%d-%Y-%H")
             # ax.xaxis.set_major_formatter(date_form)
-            # fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '_hist_12hr.png')  
+            # fig.tight_layout()
+            # fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
             # multimodal = multimodal + 1
         # fig1,ax1 = plt.subplots(figsize=(20, 12.5))
         # ax1.plot(date_filter.index,date_filter)
