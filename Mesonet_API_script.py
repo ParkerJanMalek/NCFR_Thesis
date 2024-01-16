@@ -214,10 +214,82 @@ for i in station_name_list:
         #     MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name)
             
         multimodal= 1
-        ts_selected[1]['start'] = pd.Timestamp('2017-2-6-22',tz='UTC')
-        ts_selected_isolate = ts_selected[0:5]
+        #ts_selected[1]['start'] = pd.Timestamp('2017-2-6-22',tz='UTC')
+        ts_selected_isolate = ts_selected[0:6]
+        
+        #split into pulses
+        pulse_split = ts_selected.copy()
+        def adjust_events(event):
+            event['event_rainfall'] = event['event_rainfall'][event['start']:event['end'] ]
+            event['event_perc'] = event['event_perc'][event['start']:event['end'] ]
+            event['event_total'] = np.sum(event['event_rainfall'][event['start']:event['end'] ]) 
+            event['event_avg'] = np.mean(event['event_rainfall'][event['start']:event['end'] ]) 
+        ts_1 = pulse_split[0]
+        ts_1['synoptic_event'] = 1
+        ts_1['pulse_event'] = 1
+        adjust_events(ts_1) 
+        
+        ts_2 = pulse_split[1].copy()
+        ts_2['start'] = pd.Timestamp('2017-2-6-00',tz='UTC')
+        ts_2['end'] = pd.Timestamp('2017-2-6-08',tz='UTC')
+        ts_2['synoptic_event'] = 2
+        ts_2['pulse_event'] = 2
+        adjust_events(ts_2) 
+        
+        ts_3 = pulse_split[1].copy()
+        ts_3['start']  = pd.Timestamp('2017-2-6-22',tz='UTC')
+        ts_3['synoptic_event'] = 2
+        ts_3['pulse_event'] = 3
+        adjust_events(ts_3) 
+        
+        ts_4 = pulse_split[2].copy()
+        ts_4['start'] = pd.Timestamp('2017-2-8-07',tz='UTC')
+        ts_4['end'] = pd.Timestamp('2017-2-8-22',tz='UTC')
+        ts_4['synoptic_event'] = 3
+        ts_4['pulse_event'] = 4
+        adjust_events(ts_4) 
+        
+        ts_5 = pulse_split[2].copy()
+        ts_5['start'] = pd.Timestamp('2017-2-9-08',tz='UTC')
+        ts_5['synoptic_event'] = 3
+        ts_5['pulse_event'] = 5
+        adjust_events(ts_5) 
+        
+        ts_6 = pulse_split[3].copy()
+        ts_6['synoptic_event'] = 4
+        ts_6['pulse_event'] = 6
+        adjust_events(ts_6) 
+        
+        ts_7 = pulse_split[4].copy()
+        ts_7['synoptic_event'] = 5
+        ts_7['pulse_event'] = 7
+        adjust_events(ts_7) 
+        
+        ts_8 = pulse_split[5].copy()
+        ts_8['start'] = pd.Timestamp('2017-2-17-05',tz='UTC')
+        ts_8['end'] = pd.Timestamp('2017-2-18-18',tz='UTC')
+        ts_8['synoptic_event'] = 6
+        ts_8['pulse_event'] = 8
+        adjust_events(ts_8) 
+        
+        ts_9 = pulse_split[5].copy()
+        ts_9['start'] = pd.Timestamp('2017-2-19-06',tz='UTC')
+        ts_9['synoptic_event'] = 7
+        ts_9['pulse_event'] = 9
+        adjust_events(ts_9) 
+        
+        
+
+        ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
+        event_classification = []
+        for i in ts_total:
+            event_classification.append([i['synoptic_event'],i['pulse_event'],i['start'],i['end'],i['event_total'],i['event_avg']])
+        ec = pd.DataFrame(event_classification)
+        ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)']
+        
+        ec.to_csv('Event_Classification.csv',index=False)
         tt=[ts_selected_isolate[1]]
-        for i in ts_selected_isolate:
+        for i in ts_total:
             start_date = i['start']
             end_date = i['end']
             outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\IVT_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
@@ -225,40 +297,41 @@ for i in station_name_list:
                 shutil.rmtree(outdirck)
             os.mkdir(outdirck)
             merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name,station_lon,station_lat)
-            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\Radar_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-            if os.path.exists(outdirck):
-                shutil.rmtree(outdirck)
-            os.mkdir(outdirck)
-            radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
-            MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
-            # print(i)
-            # date_filter = station_data_hourly[i['start']:i['end']]
-            # date_filter_cumsum = date_filter.cumsum()
-            # fig,ax = plt.subplots(figsize=(40, 20))
-            # ax.bar(date_filter.index,date_filter,width=0.01)
-            # ax.set_title('Synoptic Rainfall Pulse Event at Oroville Municipal Airport' , fontsize=60)
-            # plt.ylabel('Precipiation (mm)', fontsize=50)
-            # plt.xlabel('Date', fontsize=50)
-            # plt.xticks(fontsize=35,rotation=40)
-            # plt.yticks(fontsize=35)
-            # ax.grid()
-            # date_form = DateFormatter("%m-%d-%Y-%H")
-            # ax.xaxis.set_major_formatter(date_form)
-            # fig.tight_layout()
-            # fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
-            # multimodal = multimodal + 1
-        # fig1,ax1 = plt.subplots(figsize=(20, 12.5))
-        # ax1.plot(date_filter.index,date_filter)
-        # fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
-        # plt.ylabel('Precipiation (mm)', fontsize=25)
-        # plt.xlabel('Date', fontsize=25,labelpad=-0.5)
-        # plt.xticks(fontsize=15,rotation=45)
-        # plt.yticks(fontsize=15)
-        # ax1.grid()
-        # date_form = DateFormatter("%m-%d-%Y-%H")
-        # ax1.xaxis.set_major_formatter(date_form)
-        # ax2 = fig1.gca()
-        # ax2.set_ylim([0, None])
+            # outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\Radar_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            # if os.path.exists(outdirck):
+            #     shutil.rmtree(outdirck)
+            # os.mkdir(outdirck)
+            #radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
+            # MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
+            # # print(i)
+            date_filter = station_data_hourly[i['start']:i['end']]
+            date_filter_cumsum = date_filter.cumsum()
+            fig,ax = plt.subplots(figsize=(40, 20))
+            ax.bar(date_filter.index,date_filter,width=0.01)
+            ax.set_title('Synoptic Rainfall Pulse Event at Oroville Municipal Airport at Synoptic Event '+str(i['synoptic_event']) , fontsize=60)
+            plt.ylabel('Precipiation (mm)', fontsize=50)
+            plt.xlabel('Date', fontsize=50)
+            plt.xticks(fontsize=35,rotation=40)
+            plt.yticks(fontsize=35)
+            ax.grid()
+            date_form = DateFormatter("%m-%d-%Y-%H")
+            ax.xaxis.set_major_formatter(date_form)
+            fig.tight_layout()
+            fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
+            multimodal = multimodal + 1
+        fig1,ax1 = plt.subplots(figsize=(20, 12.5))
+        date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+        ax1.plot(date_filter.index,date_filter)
+        fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
+        plt.ylabel('Precipiation (mm)', fontsize=25)
+        plt.xlabel('Date', fontsize=25,labelpad=-0.5)
+        plt.xticks(fontsize=15,rotation=45)
+        plt.yticks(fontsize=15)
+        ax1.grid()
+        date_form = DateFormatter("%m-%d-%Y-%H")
+        ax1.xaxis.set_major_formatter(date_form)
+        ax2 = fig1.gca()
+        ax2.set_ylim([0, None])
     else:
         print("No data available for " + station_name)
         
