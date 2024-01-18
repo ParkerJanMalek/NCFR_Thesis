@@ -308,7 +308,7 @@ for i in station_name_list:
             date_filter_cumsum = date_filter.cumsum()
             fig,ax = plt.subplots(figsize=(40, 20))
             ax.bar(date_filter.index,date_filter,width=0.01)
-            ax.set_title('Synoptic Rainfall Pulse Event at Oroville Municipal Airport at Synoptic Event '+str(i['synoptic_event']) , fontsize=60)
+            ax.set_title('Synoptic Rainfall Pulse Event ' + str(multimodal)  , fontsize=60)
             plt.ylabel('Precipiation (mm)', fontsize=50)
             plt.xlabel('Date', fontsize=50)
             plt.xticks(fontsize=35,rotation=40)
