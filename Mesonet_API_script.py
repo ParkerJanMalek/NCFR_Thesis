@@ -283,25 +283,24 @@ for i in station_name_list:
         ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
         event_classification = []
         for i in ts_total:
-            event_classification.append([i['synoptic_event'],i['pulse_event'],i['start'],i['end'],i['event_total'],i['event_avg']])
+            event_classification.append([i['synoptic_event'],i['pulse_event'],i['start'],i['end'],i['event_total'],i['event_avg'],np.max(i['event_rainfall']),i['end']-i['start']])
         ec = pd.DataFrame(event_classification)
-        ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)']
+        ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)',"Maxium Precipitation (mm)",'Day Difference']
         
         ec.to_csv('Event_Classification.csv',index=False)
-        tt=[ts_selected_isolate[1]]
         for i in ts_total:
             start_date = i['start']
             end_date = i['end']
-            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\IVT_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-            if os.path.exists(outdirck):
-                shutil.rmtree(outdirck)
-            os.mkdir(outdirck)
-            merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name,station_lon,station_lat)
-            # outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\Radar_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            # outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\IVT_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
             # if os.path.exists(outdirck):
             #     shutil.rmtree(outdirck)
             # os.mkdir(outdirck)
-            #radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
+            #merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name,station_lon,station_lat)
+            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            if os.path.exists(outdirck):
+                shutil.rmtree(outdirck)
+            os.mkdir(outdirck)
+            radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
             # MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
             # # print(i)
             date_filter = station_data_hourly[i['start']:i['end']]
@@ -311,10 +310,11 @@ for i in station_name_list:
             ax.set_title('Synoptic Rainfall Pulse Event ' + str(multimodal)  , fontsize=60)
             plt.ylabel('Precipiation (mm)', fontsize=50)
             plt.xlabel('Date', fontsize=50)
-            plt.xticks(fontsize=35,rotation=40)
-            plt.yticks(fontsize=35)
+            plt.xticks(fontsize=45,rotation=40)
+            plt.yticks(fontsize=45)
+            plt.ylim([0,4.5])
             ax.grid()
-            date_form = DateFormatter("%m-%d-%Y-%H")
+            date_form = DateFormatter("%d-%H")
             ax.xaxis.set_major_formatter(date_form)
             fig.tight_layout()
             fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
@@ -324,9 +324,9 @@ for i in station_name_list:
         ax1.plot(date_filter.index,date_filter)
         fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
         plt.ylabel('Precipiation (mm)', fontsize=25)
-        plt.xlabel('Date', fontsize=25,labelpad=-0.5)
+        plt.xlabel('Date', fontsize=30,labelpad=-0.5)
         plt.xticks(fontsize=15,rotation=45)
-        plt.yticks(fontsize=15)
+        plt.yticks(fontsize=30)
         ax1.grid()
         date_form = DateFormatter("%m-%d-%Y-%H")
         ax1.xaxis.set_major_formatter(date_form)
