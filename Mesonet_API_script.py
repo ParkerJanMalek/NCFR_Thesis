@@ -288,6 +288,10 @@ for i in station_name_list:
         ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)',"Maxium Precipitation (mm)",'Day Difference']
         
         ec.to_csv('Event_Classification.csv',index=False)
+        
+        #plot all pulse events
+        fig = plt.figure(figsize=(40, 20))
+        multimodal= 1
         for i in ts_total:
             start_date = i['start']
             end_date = i['end']
@@ -296,29 +300,35 @@ for i in station_name_list:
             #     shutil.rmtree(outdirck)
             # os.mkdir(outdirck)
             #merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name,station_lon,station_lat)
-            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-            if os.path.exists(outdirck):
-                shutil.rmtree(outdirck)
-            os.mkdir(outdirck)
-            radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
+            # outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            # if os.path.exists(outdirck):
+            #     shutil.rmtree(outdirck)
+            # os.mkdir(outdirck)
+            # radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
             # MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
             # # print(i)
             date_filter = station_data_hourly[i['start']:i['end']]
             date_filter_cumsum = date_filter.cumsum()
-            fig,ax = plt.subplots(figsize=(40, 20))
+            ax = fig.add_subplot(3,3,multimodal)
             ax.bar(date_filter.index,date_filter,width=0.01)
-            ax.set_title('February 2017 Rainfall Pulse Event #' + str(multimodal)  , fontsize=60)
-            plt.ylabel('Precipiation (mm)', fontsize=50)
-            plt.xlabel('Day:Hour', fontsize=50)
-            plt.xticks(fontsize=45,rotation=40)
-            plt.yticks(fontsize=45)
+            ax.set_title('Event #' + str(multimodal)  , fontsize=40)
+            plt.xticks(fontsize=25,rotation=30)
+            plt.yticks(fontsize=25)
             plt.ylim([0,4.5])
             ax.grid()
             date_form = DateFormatter("%d:%H")
             ax.xaxis.set_major_formatter(date_form)
-            fig.tight_layout()
-            fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
+            
+            #fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
+            print(multimodal)
             multimodal = multimodal + 1
+        fig.tight_layout(rect=[0.05, 0.05, 1, 0.93])   
+        fig.supylabel('Precipiation (mm)', fontsize=50)
+        fig.supxlabel('Day:Hour', fontsize=50)
+        fig.suptitle("February 2017 Rainfall Pulses at Oroville Municipal Airport",fontsize=50)
+        fig.savefig(station_name + "_Pulses"+ '.jpeg')
+        
+        
         fig1,ax1 = plt.subplots(figsize=(20, 12.5))
         date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
         ax1.plot(date_filter.index,date_filter)

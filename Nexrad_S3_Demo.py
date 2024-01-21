@@ -405,7 +405,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                fig.tight_layout()
                var=var+1
                fig.suptitle('Precipitation Pulse Tracker', fontsize=60,fontweight="bold")
-           plt.show()
+           #plt.show()
            fig.savefig(outdir+savestr+".png")
 
 
