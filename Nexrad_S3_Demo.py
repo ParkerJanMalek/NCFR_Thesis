@@ -37,7 +37,7 @@ from pyproj import Geod #this is used to convert range/azimuth to lat/lon
 
 import matplotlib.axes as maxes
 
-def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
+def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar_name,slat,slon):
     start_date = dtetme.datetime(start_date1.year,start_date1.month,start_date1.day,start_date1.hour)
     end_date = dtetme.datetime(end_date1.year,end_date1.month,end_date1.day,end_date1.hour)
     print(start_date)
@@ -50,20 +50,23 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
         month = str(dt.month).zfill(2)
         day = str(dt.day).zfill(2)
         hour = str(dt.hour).zfill(2)
-        print(str(dt.year) + '/' + month + '/' + day + '/KBBX/KBBX'+ str(dt.year) + month + day + '_'+hour)
+        print(str(dt.year) + '/' + month + '/' + day + '/'+radar_name+'/'+radar_name+ str(dt.year) + month + day + '_'+hour)
         # construct a list of days/hours to loop through.
 
         radar_object1 = bucket.objects.filter(Prefix=str(dt.year) + '/' + month + '/' + day + '/KBBX/KBBX'+ str(dt.year) + month + day + '_'+hour)
+        #print(len(list(radar_object1)))
+        if len(list(radar_object1)) == 0:
+            radar_object1 = bucket.objects.filter(Prefix=str(dt.year) + '/' + month + '/' + day + '/KDAX/KDAX'+ str(dt.year) + month + day + '_'+hour)
         fig = plt.figure(figsize=(40, 20))
         for obj in radar_object1:
 
 
            #%% IMPORT MERRA2 DATA
            # define metvar
-           metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAnom']
-           metvars = ['IVT','850TAnom']#]
+           metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAdv']
+           metvars = ['IVT','850T','SLP']#]
            #metvar = '300W'
-           fig = plt.figure(figsize=(40, 20))
+           fig = plt.figure(figsize=(60, 20))
            var=0
            for metvar in metvars:
                savestr = obj.key.split("/")[-1]
@@ -75,18 +78,17 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                ax1.bar(date_filter.index,date_filter,width=0.01)
                ax1.axvline(x=dt,linewidth=4, color='r')
                plt.ylabel('Precipiation (mm)', fontsize=30)
-               plt.xlabel('Day:Hour', fontsize=30)
+               plt.xlabel('Hour', fontsize=30)
                plt.xticks(fontsize=30,rotation=40)
                plt.yticks(fontsize=30)
                plt.ylim([0,4.5])
                ax1.grid()
-               date_form = DateFormatter("%d:%H")
+               date_form = DateFormatter("%H:%M")
                ax1.xaxis.set_major_formatter(date_form)
                #ax1.set_title('Precipitation Pulse Tracker',fontsize=40,pad=10)
 
                 # Use MetPy to read the file
                f = Level2File(obj.get()['Body'])
-
                sweep = 0
              # First item in ray is header, which has azimuth angle
                az = np.array([ray[0].az_angle for ray in f.sweeps[sweep]])
@@ -136,7 +138,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
              # this declares a recentered projection for Pacific areas
                usemap_proj = ccrs.PlateCarree(central_longitude=180)
                usemap_proj._threshold /= 20.  # to make greatcircle smooth
-               ax = fig.add_subplot(2,3,1,projection=usemap_proj)
+               ax = fig.add_subplot(2,4,1,projection=usemap_proj)
                ax.axis('off')
              #ax = plt.axes(projection=usemap_proj)
              # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
@@ -190,7 +192,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
 
              # Plot the data
                a = ax.pcolormesh(360+lon,lat, data, cmap=colors, norm=norm,transform=ccrs.PlateCarree())
-               ax.plot(360+rLON,rLAT,marker='o', color='red', markersize=20, transform=ccrs.PlateCarree())
+               ax.plot(360+slon,slat,marker='o', color='red', markersize=20, transform=ccrs.PlateCarree())
 
                divider = make_axes_locatable(ax)
 
@@ -234,8 +236,9 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
 
                if metvar == 'IVT':
                    filepath = "G:/NCFR Thesis/NCFR_Thesis/data/MERRA2_400.tavg1_2d_int_Nx."+str(dt.year)+str("{:02d}".format(dt.month))+str("{:02d}".format(dt.day))+".SUB.nc"#G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_400.tavg1_2d_int_Nx."+dt.20170207.SUB.nc"
-               elif metvar == '850TAnom':
+               elif metvar == '850TAdv' or metvar == '850T' or metvar == 'SLP':
                    filepath = "G:/NCFR Thesis/NCFR_Thesis/data/MERRA2_400.tavg1_2d_slv_Nx."+str(dt.year)+str("{:02d}".format(dt.month))+str("{:02d}".format(dt.day))+".nc4"
+                   print(filepath)
              #COLLECT VARIABLE DATA FROM MERRA2 FILE
                merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
              #open the netcdf file in read mode
@@ -246,7 +249,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                    Uvapor = gridfile.variables['UFLXQV'][:]
                    Vvapor = gridfile.variables['VFLXQV'][:]
                    merra = np.sqrt(Uvapor**2 + Vvapor**2)
-               elif metvar == '850TAnom': #temperature advection
+               elif metvar == '850TAdv': #temperature advection
                    UT = gridfile.variables['U850'][:]
                    VT = gridfile.variables['V850'][:]
                    T = gridfile.variables['T850'][:]
@@ -257,6 +260,11 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                    gradx=np.gradient(x,axis=1)
                    grady=np.gradient(y,axis=0)
                    merra=-(UT*(np.gradient(T,axis=1)/gradx)+VT*(np.gradient(T,axis=0)/grady))*3600
+               elif metvar == 'SLP':
+                   merra = gridfile.variables['SLP'][:]/100
+               elif metvar == '850T':
+                   merra = gridfile.variables['T850'][:]
+                    
              #     merra = np.sqrt(Uvapor**2 + Vvapor**2)
                gridfile.close()
 
@@ -277,6 +285,8 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
              #reduce pressure
                merrareduced = merra[:,latind,:]
                merrareduced = merrareduced[:,:,lonind]
+               #isolate to hour
+               arr = merrareduced[dt.hour,:,:]
 
              #print(np.amin(merrareduced),np.amax(merrareduced))
 
@@ -294,21 +304,22 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                    return newmap
 
              #%% DEFINE PLOTTING VARIABLES
-               minmax = 0.002 *3600 #s to hour
-               lowanom, highanom = (-minmax, minmax)
+               mini = round(np.min(arr),1)#0.002 *3600 #s to hour
+               maxi = round(np.max(arr),1)
+               lowanom, highanom = (mini, maxi)
                newmap = center_colormap(lowanom, highanom, center=0)
-               lowlims = {'Z500':2850,'SLP':985,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAnom':-minmax}
-               highlims = {'Z500':5700,'SLP':1022,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAnom':minmax}
+               lowlims = {'Z500':2850,'SLP':970,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':mini}
+               highlims = {'Z500':5700,'SLP':1022,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':maxi}
 
-               contourstart = {'Z500':3000,'SLP':990,'IVT':0,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAnom':-minmax}
-               contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAnom':minmax/6}
+               contourstart = {'Z500':3000,'SLP':980,'IVT':0,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
+               contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAdv':maxi/6}
 
-               cbarstart = {'Z500':3000,'SLP':990,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAnom':-minmax}
-               cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAnom':minmax/6}
+               cbarstart = {'Z500':3000,'SLP':980,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':mini}
+               cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAdv':maxi/6}
 
-               colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':newmap,'Z850':'turbo','SLPAnom':newmap,'850TAnom':'coolwarm'}
-               cbarlabs = {'Z500':'m','SLP':'hPa','IVT':'kg $\mathregular{m^{-1}}$ $\mathregular{s^{-1}}$','300W':'m/s','850T':'K','Z500Anom':r'$\mathbf{\sigma}$','Z850':'m','SLPAnom':r'$\mathbf{\sigma}$','850TAnom':'Degrees/hr'}
-               plottitle = {'Z500':'Z500','SLP':'SLP','IVT':'IVT','300W':'300 hPa Wind','850T':'850 hPa Temperature Advection','Z500Anom':'Z500 Anomaly','Z850':'Z850','SLPAnom':'SLP Anomaly','850TAnom':'850 hPa Temperature Advection'}
+               colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':newmap,'Z850':'turbo','SLPAnom':newmap,'850TAdv':'coolwarm'}
+               cbarlabs = {'Z500':'m','SLP':'hPa','IVT':'kg $\mathregular{m^{-1}}$ $\mathregular{s^{-1}}$','300W':'m/s','850T':'K','Z500Anom':r'$\mathbf{\sigma}$','Z850':'m','SLPAnom':r'$\mathbf{\sigma}$','850TAdv':'Degrees/hr'}
+               plottitle = {'Z500':'Z500','SLP':'SLP','IVT':'IVT','300W':'300 hPa Wind','850T':'850 hPa Temperature','Z500Anom':'Z500 Anomaly','Z850':'Z850','SLPAnom':'SLP Anomaly','850TAdv':'850 hPa Temperature Advection'}
              #%% PLOT NODES from MATLAB
 
              #create subplot for mapping multiple timesteps
@@ -354,7 +365,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                usemap_proj = ccrs.PlateCarree(central_longitude=180)
                usemap_proj._threshold /= 20.  # to make greatcircle smooth
   
-               ax2 = fig.add_subplot(2,3,2+var,projection=usemap_proj)
+               ax2 = fig.add_subplot(2,4,2+var,projection=usemap_proj)
                ax2.set_global()
 
                border_c = '0.4'
@@ -372,11 +383,11 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                gl.xlabel_style = {'size': 25}
                gl.ylabel_style = {'size': 25}
              # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
-               if metvar=="850TAnom":
+               if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
                    ax2.set_extent([bot_left_lon, top_right_lon, bot_left_lat, top_right_lat], crs=ccrs.PlateCarree())
                else:
                    ax2.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
-               ax2.plot(360+rLON,rLAT,marker='o', color='red', markersize=15, transform=ccrs.PlateCarree())
+               ax2.plot(360+slon,slat,marker='o', color='red', markersize=15, transform=ccrs.PlateCarree())
   
              #define area threshold for basemap
                area_thresh = 1E4
@@ -389,7 +400,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
              #ax = plt.axes(projection=usemap_proj)
              # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
              # Set contour levels, then draw the plot and a colorbar
-               arr = merrareduced[dt.hour,:,:]
+               
                contour_c = '0.1'
                contour_w = 0.7
                lon, lat = np.meshgrid(gridlonreduced,gridlatreduced)
@@ -404,9 +415,10 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name):
                ax2.set_title(figtitle,fontsize=40,pad=10)
                fig.tight_layout()
                var=var+1
-               fig.suptitle('Precipitation Pulse Tracker', fontsize=60,fontweight="bold")
+               fig.suptitle('Precipitation Pulse Tracker', fontsize=60,fontweight="bold",y=0.98)
            #plt.show()
            fig.savefig(outdir+savestr+".png")
+           plt.close('all')
 
 
 

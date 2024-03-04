@@ -84,6 +84,9 @@ unit = 'precip|mm'
 plot_full_record = False
 output_5_perc_data = 'G:\\NCFR Thesis\\NCFR_Thesis\\precip_threshold_dates\\'
 
+
+
+
 #define cumsum dates
 start_date = dtetme.datetime(2017,2,7,0)
 end_date = dtetme.datetime(2017,2,7,23)
@@ -261,6 +264,7 @@ for i in station_name_list:
         adjust_events(ts_6) 
         
         ts_7 = pulse_split[4].copy()
+        ts_7['start'] = pd.Timestamp('2017-2-16-06',tz='UTC')
         ts_7['synoptic_event'] = 5
         ts_7['pulse_event'] = 7
         adjust_events(ts_7) 
@@ -280,15 +284,15 @@ for i in station_name_list:
         
         
 
-        ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
+        ts_total = [ts_9]
         event_classification = []
         for i in ts_total:
-            event_classification.append([i['synoptic_event'],i['pulse_event'],i['start'],i['end'],i['event_total'],i['event_avg'],np.max(i['event_rainfall']),i['end']-i['start']])
+            event_classification.append([i['synoptic_event'],i['pulse_event'],str(i['start'].month) +"-"+ str(i['start'].day) +"-"+ str(i['start'].hour),str(i['end'].month) +"-"+ str(i['end'].day) +"-"+ str(i['end'].hour),np.round(i['event_total'],1),np.round(i['event_avg'],1),np.round(np.max(i['event_rainfall']),1),i['end']-i['start']])
         ec = pd.DataFrame(event_classification)
         ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)',"Maxium Precipitation (mm)",'Day Difference']
         
         ec.to_csv('Event_Classification.csv',index=False)
-        
+        ts_ams = [ts_9]
         #plot all pulse events
         fig = plt.figure(figsize=(40, 20))
         multimodal= 1
@@ -300,11 +304,11 @@ for i in station_name_list:
             #     shutil.rmtree(outdirck)
             # os.mkdir(outdirck)
             #merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name,station_lon,station_lat)
-            # outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-            # if os.path.exists(outdirck):
-            #     shutil.rmtree(outdirck)
-            # os.mkdir(outdirck)
-            # radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name)
+            outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+            if os.path.exists(outdirck):
+                shutil.rmtree(outdirck)
+            os.mkdir(outdirck)
+            radar.pull_radar(i['start'], i['end'],station_data_hourly,i,station_name,'KBBX',station_lat,station_lon)
             # MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
             # # print(i)
             date_filter = station_data_hourly[i['start']:i['end']]
@@ -327,7 +331,7 @@ for i in station_name_list:
         fig.supxlabel('Day:Hour', fontsize=50)
         fig.suptitle("February 2017 Rainfall Pulses at Oroville Municipal Airport",fontsize=50)
         fig.savefig(station_name + "_Pulses"+ '.jpeg')
-        
+        plt.close('all')
         
         fig1,ax1 = plt.subplots(figsize=(20, 12.5))
         date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
@@ -342,6 +346,31 @@ for i in station_name_list:
         ax1.xaxis.set_major_formatter(date_form)
         ax2 = fig1.gca()
         ax2.set_ylim([0, None])
+        fig1.savefig('KOVE'+'.jpeg')
+        plt.close('all')
+        
+        cwe_series = {'CDEC_MFF_2002_2023_V2':'CDEC_MFF_FBS_2840','CDEC_NFF_2002_2023':'CDEC_NFF_BRS_3560','CDEC_UYB_2002_2023':'CDEC_UYB_PKC_3714'}
+        for i in cwe_series.keys():
+        
+            additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
+            site = cwe_series[i].split('_')[2]
+            fig2,ax2 = plt.subplots(figsize=(20, 12.5))
+            date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+            dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
+            
+            ax2.plot(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0])
+            fig2.suptitle('Hourly Precipitation at Oroville Dam ('+site.upper() + ") \n in February 2017", fontsize=30)
+            plt.ylabel('Precipiation (mm)', fontsize=25)
+            plt.xlabel('Date', fontsize=30,labelpad=-0.5)
+            plt.xticks(fontsize=15,rotation=45)
+            plt.yticks(fontsize=30)
+            ax2.grid()
+            date_form = DateFormatter("%m-%d-%Y-%H")
+            ax2.xaxis.set_major_formatter(date_form)
+            ax3 = fig2.gca()
+            ax3.set_ylim([0, None])
+            fig2.savefig(site.upper()+'.jpeg')
+            plt.close('all')
     else:
         print("No data available for " + station_name)
         
