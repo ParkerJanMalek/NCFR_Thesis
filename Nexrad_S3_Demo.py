@@ -238,7 +238,11 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                    filepath = "G:/NCFR Thesis/NCFR_Thesis/data/MERRA2_400.tavg1_2d_int_Nx."+str(dt.year)+str("{:02d}".format(dt.month))+str("{:02d}".format(dt.day))+".SUB.nc"#G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_400.tavg1_2d_int_Nx."+dt.20170207.SUB.nc"
                elif metvar == '850TAdv' or metvar == '850T' or metvar == 'SLP':
                    filepath = "G:/NCFR Thesis/NCFR_Thesis/data/MERRA2_400.tavg1_2d_slv_Nx."+str(dt.year)+str("{:02d}".format(dt.month))+str("{:02d}".format(dt.day))+".nc4"
-                   print(filepath)
+               windv = "G:/NCFR Thesis/NCFR_Thesis/era5_10m_v_component_of_wind_2017_hourly_165E-80W_25N-80N.nc" 
+               windu = "G:/NCFR Thesis/NCFR_Thesis/era5_10m_u_component_of_wind_2017_hourly_165E-80W_25N-80N.nc"
+               wv = nc.Dataset(windv,mode='r')
+               wu = nc.Dataset(windu,mode='r')
+               
              #COLLECT VARIABLE DATA FROM MERRA2 FILE
                merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
              #open the netcdf file in read mode
@@ -269,7 +273,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                gridfile.close()
 
                merra = np.squeeze(merra)
-
+               
 
              #%% REDUCE LAT AND LON TO DESIRED AREA
 
