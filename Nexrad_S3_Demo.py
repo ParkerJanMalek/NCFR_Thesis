@@ -238,11 +238,7 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                    filepath = "G:/NCFR Thesis/NCFR_Thesis/data/MERRA2_400.tavg1_2d_int_Nx."+str(dt.year)+str("{:02d}".format(dt.month))+str("{:02d}".format(dt.day))+".SUB.nc"#G:\\NCFR Thesis\\NCFR_Thesis\\MERRA2_400.tavg1_2d_int_Nx."+dt.20170207.SUB.nc"
                elif metvar == '850TAdv' or metvar == '850T' or metvar == 'SLP':
                    filepath = "G:/NCFR Thesis/NCFR_Thesis/data/MERRA2_400.tavg1_2d_slv_Nx."+str(dt.year)+str("{:02d}".format(dt.month))+str("{:02d}".format(dt.day))+".nc4"
-               windv = "G:/NCFR Thesis/NCFR_Thesis/era5_10m_v_component_of_wind_2017_hourly_165E-80W_25N-80N.nc" 
-               windu = "G:/NCFR Thesis/NCFR_Thesis/era5_10m_u_component_of_wind_2017_hourly_165E-80W_25N-80N.nc"
-               wv = nc.Dataset(windv,mode='r')
-               wu = nc.Dataset(windu,mode='r')
-               
+              
              #COLLECT VARIABLE DATA FROM MERRA2 FILE
                merravar = {'Z500':'H','SLP':'SLP','850T':'T','Z850':'H'}
              #open the netcdf file in read mode
@@ -264,11 +260,17 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                    gradx=np.gradient(x,axis=1)
                    grady=np.gradient(y,axis=0)
                    merra=-(UT*(np.gradient(T,axis=1)/gradx)+VT*(np.gradient(T,axis=0)/grady))*3600
-               elif metvar == 'SLP':
+               elif metvar == 'SLP': 
                    merra = gridfile.variables['SLP'][:]/100
                elif metvar == '850T':
                    merra = gridfile.variables['T850'][:]
-                    
+               windu = nc.Dataset("D:\era5_10m_u_component_of_wind_2017_hourly_165E-80W_25N-80N.nc",mode='r')
+               windv = nc.Dataset("D:\era5_10m_v_component_of_wind_2017_hourly_165E-80W_25N-80N.nc",mode='r')
+               initial = datetime.datetime(1900, 1, 1, 0)
+               wind_time = [initial + timedelta(hours=int(i)) for i in windu['time'][:]]
+               feb_index = [i == datetime(dt.year,dt.month,dt.day,dt.hour)  for i in wind_time]
+               wu = windu['u10'][feb_index,:,:]
+               wv = windv['v10'][feb_index,:,:]
              #     merra = np.sqrt(Uvapor**2 + Vvapor**2)
                gridfile.close()
 
@@ -291,7 +293,31 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                merrareduced = merrareduced[:,:,lonind]
                #isolate to hour
                arr = merrareduced[dt.hour,:,:]
-
+               
+              #reduce lat windu
+               wulat = windu['latitude'][:]
+               wulon = windu['longitude'][:]-360
+               latlims_u = np.logical_and(wulat > latmin, wulat < latmax)
+               lonlims_u = np.logical_and(wulon > lonmin, wulon < lonmax)
+               # latind = np.where(latlims)[0]
+               # gridlatreduced_wulat = wulat[latind]
+               # lonind = np.where(lonlims)[0]
+               # gridlonreduced_wulon = wulat[lonind]
+               
+               #reduce lat windv
+               wvlat = windv['latitude'][:]
+               wvlon = windv['longitude'][:] -360
+               latlims_v = np.logical_and(wvlat > latmin, wvlat < latmax)
+               lonlims_v = np.logical_and(wvlon > lonmin, wvlon < lonmax)
+               # latind = np.where(latlims)[0]
+               # gridlatreduced_wvlat = wvlat[latind]
+               # lonind = np.where(lonlims)[0]
+               # gridlonreduced_wvlon = wvlon[lonind]
+               
+               wv_final1 = wv[:,latlims_v,:]
+               wv_final = wv_final1[:,:,lonlims_v]
+               wu_final1 = wu[:,latlims_u,:]
+               wu_final = wu_final1[:,:,lonlims_u]
              #print(np.amin(merrareduced),np.amax(merrareduced))
 
 
