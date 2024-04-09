@@ -30,6 +30,7 @@ from dateutil import rrule
 from datetime import datetime, timedelta
 import datetime  as dtetme
 from matplotlib.dates import DayLocator, DateFormatter
+import pickle
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -264,13 +265,52 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                    merra = gridfile.variables['SLP'][:]/100
                elif metvar == '850T':
                    merra = gridfile.variables['T850'][:]
-               windu = nc.Dataset("D:\era5_10m_u_component_of_wind_2017_hourly_165E-80W_25N-80N.nc",mode='r')
-               windv = nc.Dataset("D:\era5_10m_v_component_of_wind_2017_hourly_165E-80W_25N-80N.nc",mode='r')
-               initial = datetime.datetime(1900, 1, 1, 0)
-               wind_time = [initial + timedelta(hours=int(i)) for i in windu['time'][:]]
-               feb_index = [i == datetime(dt.year,dt.month,dt.day,dt.hour)  for i in wind_time]
-               wu = windu['u10'][feb_index,:,:]
-               wv = windv['v10'][feb_index,:,:]
+                   
+               #load wind data
+               
+               #uwind
+               file = open("G:/NCFR Thesis/NCFR_Thesis/windu1.pickle",'rb')
+               wu_1 = pickle.load(file)
+               file.close()
+               
+               #vwind
+               file = open("G:/NCFR Thesis/NCFR_Thesis/windv1.pickle",'rb')
+               wv_1 = pickle.load(file)
+               file.close()
+               
+               
+               #windtime
+               file = open("G:/NCFR Thesis/NCFR_Thesis/windtime.pickle",'rb')
+               wtime = pickle.load(file)
+               file.close()
+               
+               #windulat
+               file = open("G:/NCFR Thesis/NCFR_Thesis/windlatu.pickle",'rb')
+               wlatu = pickle.load(file)
+               file.close()
+               
+               #windulon
+               file = open("G:/NCFR Thesis/NCFR_Thesis/windlonu.pickle",'rb')
+               wlonu = pickle.load(file)
+               file.close()
+               
+               #windvlat
+               file = open("G:/NCFR Thesis/NCFR_Thesis/windlatv.pickle",'rb')
+               wlatv = pickle.load(file)
+               file.close()
+               
+               #windvlon
+               file = open("G:/NCFR Thesis/NCFR_Thesis/windlonv.pickle",'rb')
+               wlonv = pickle.load(file)
+               file.close()
+               
+               
+               initial = datetime(2017, 2, 19, 6)
+               #wind_time = [initial + timedelta(hours=int(i)) for i in windu['time'][:]]
+               print(dt.year)
+               feb_index = [i == initial for i in wtime]
+               wu = np.squeeze(wu_1[feb_index,:,:]) 
+               wv = np.squeeze(wv_1[feb_index,:,:])
              #     merra = np.sqrt(Uvapor**2 + Vvapor**2)
                gridfile.close()
 
@@ -294,30 +334,31 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                #isolate to hour
                arr = merrareduced[dt.hour,:,:]
                
-              #reduce lat windu
-               wulat = windu['latitude'][:]
-               wulon = windu['longitude'][:]-360
-               latlims_u = np.logical_and(wulat > latmin, wulat < latmax)
-               lonlims_u = np.logical_and(wulon > lonmin, wulon < lonmax)
-               # latind = np.where(latlims)[0]
-               # gridlatreduced_wulat = wulat[latind]
-               # lonind = np.where(lonlims)[0]
-               # gridlonreduced_wulon = wulat[lonind]
                
-               #reduce lat windv
-               wvlat = windv['latitude'][:]
-               wvlon = windv['longitude'][:] -360
-               latlims_v = np.logical_and(wvlat > latmin, wvlat < latmax)
-               lonlims_v = np.logical_and(wvlon > lonmin, wvlon < lonmax)
-               # latind = np.where(latlims)[0]
-               # gridlatreduced_wvlat = wvlat[latind]
-               # lonind = np.where(lonlims)[0]
-               # gridlonreduced_wvlon = wvlon[lonind]
+              # #reduce lat windu
+              #  wulat = windu['latitude'][:]
+              #  wulon = windu['longitude'][:]-360
+              #  latlims_u = np.logical_and(wulat > latmin, wulat < latmax)
+              #  lonlims_u = np.logical_and(wulon > lonmin, wulon < lonmax)
+              #  # latind = np.where(latlims)[0]
+              #  # gridlatreduced_wulat = wulat[latind]
+              #  # lonind = np.where(lonlims)[0]
+              #  # gridlonreduced_wulon = wulat[lonind]
                
-               wv_final1 = wv[:,latlims_v,:]
-               wv_final = wv_final1[:,:,lonlims_v]
-               wu_final1 = wu[:,latlims_u,:]
-               wu_final = wu_final1[:,:,lonlims_u]
+              #  #reduce lat windv
+              #  wvlat = windv['latitude'][:]
+              #  wvlon = windv['longitude'][:] -360
+              #  latlims_v = np.logical_and(wvlat > latmin, wvlat < latmax)
+              #  lonlims_v = np.logical_and(wvlon > lonmin, wvlon < lonmax)
+              #  # latind = np.where(latlims)[0]
+              #  # gridlatreduced_wvlat = wvlat[latind]
+              #  # lonind = np.where(lonlims)[0]
+              #  # gridlonreduced_wvlon = wvlon[lonind]
+               
+              #  wv_final1 = wv[:,latlims_v,:]
+              #  wv_final = wv_final1[:,:,lonlims_v]
+              #  wu_final1 = wu[:,latlims_u,:]
+              #  wu_final = wu_final1[:,:,lonlims_u]
              #print(np.amin(merrareduced),np.amax(merrareduced))
 
 
@@ -434,11 +475,13 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                contour_c = '0.1'
                contour_w = 0.7
                lon, lat = np.meshgrid(gridlonreduced,gridlatreduced)
+               lonb,latb = np.meshgrid(wlatu,wlonu)
              #ax2.scatter(-120.9,39.5,color='r',marker='*',linewidths=5)
                colorm = ax2.pcolor(lon,lat,arr,shading='auto',cmap=colormap[metvar],vmin=lowlims[metvar],vmax=highlims[metvar])
                mp =  ax2.contourf(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar])
                mp2 = ax2.contour(lon,lat,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart[metvar],highlims[metvar]+1,contourint[metvar]))
-  
+               ax2.barbs(latb,latb,wu,wv,length=5,sizes=dict(emptybarb=0.25, spacing=0.2, height=0.5),
+             linewidth=0.95)
                cbar = plt.colorbar(mp,ticks=np.arange(cbarstart[metvar],highlims[metvar],cbarint[metvar]),orientation='vertical',pad=0.08)
                cbar.set_label(cbarlabs[metvar],fontsize=20,labelpad=0.5,fontweight='bold')
                cbar.ax.tick_params(labelsize=20)
