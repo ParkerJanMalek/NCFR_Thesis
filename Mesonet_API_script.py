@@ -284,7 +284,7 @@ for i in station_name_list:
         
         
 
-        ts_total = [ts_9]
+        ts_total = [ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
         event_classification = []
         for i in ts_total:
             event_classification.append([i['synoptic_event'],i['pulse_event'],str(i['start'].month) +"-"+ str(i['start'].day) +"-"+ str(i['start'].hour),str(i['end'].month) +"-"+ str(i['end'].day) +"-"+ str(i['end'].hour),np.round(i['event_total'],1),np.round(i['event_avg'],1),np.round(np.max(i['event_rainfall']),1),i['end']-i['start']])
@@ -292,13 +292,16 @@ for i in station_name_list:
         ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)',"Maxium Precipitation (mm)",'Day Difference']
         
         ec.to_csv('Event_Classification.csv',index=False)
-        ts_ams = [ts_9]
+        ts_ams = [ts_1]
         #plot all pulse events
         fig = plt.figure(figsize=(40, 20))
         multimodal= 1
-        for i in ts_total:
+        for i in ts_ams:
+            
             start_date = i['start']
             end_date = i['end']
+            print(start_date)
+            print(end_date)
             # outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\IVT_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
             # if os.path.exists(outdirck):
             #     shutil.rmtree(outdirck)
@@ -350,6 +353,8 @@ for i in station_name_list:
         plt.close('all')
         
         cwe_series = {'CDEC_MFF_2002_2023_V2':'CDEC_MFF_FBS_2840','CDEC_NFF_2002_2023':'CDEC_NFF_BRS_3560','CDEC_UYB_2002_2023':'CDEC_UYB_PKC_3714'}
+        cwe_titles = ['Forbestown','Brush Creek','Pike County']
+        title_i = 0
         for i in cwe_series.keys():
         
             additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
@@ -359,7 +364,7 @@ for i in station_name_list:
             dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
             
             ax2.plot(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0])
-            fig2.suptitle('Hourly Precipitation at Oroville Dam ('+site.upper() + ") \n in February 2017", fontsize=30)
+            fig2.suptitle('Hourly Precipitation at Oroville Dam ('+cwe_titles[title_i]+ ") \n in February 2017", fontsize=30)
             plt.ylabel('Precipiation (mm)', fontsize=25)
             plt.xlabel('Date', fontsize=30,labelpad=-0.5)
             plt.xticks(fontsize=15,rotation=45)
@@ -369,8 +374,10 @@ for i in station_name_list:
             ax2.xaxis.set_major_formatter(date_form)
             ax3 = fig2.gca()
             ax3.set_ylim([0, None])
+            fig2.tight_layout() 
             fig2.savefig(site.upper()+'.jpeg')
-            plt.close('all')
+            title_i = title_i + 1
+            #plt.close('all')
     else:
         print("No data available for " + station_name)
         
