@@ -284,7 +284,7 @@ for i in station_name_list:
         
         
 
-        ts_total = [ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
+        ts_total = [ts_8,ts_9]
         event_classification = []
         for i in ts_total:
             event_classification.append([i['synoptic_event'],i['pulse_event'],str(i['start'].month) +"-"+ str(i['start'].day) +"-"+ str(i['start'].hour),str(i['end'].month) +"-"+ str(i['end'].day) +"-"+ str(i['end'].hour),np.round(i['event_total'],1),np.round(i['event_avg'],1),np.round(np.max(i['event_rainfall']),1),i['end']-i['start']])
@@ -296,7 +296,7 @@ for i in station_name_list:
         #plot all pulse events
         fig = plt.figure(figsize=(40, 20))
         multimodal= 1
-        for i in ts_ams:
+        for i in ts_total:
             
             start_date = i['start']
             end_date = i['end']
