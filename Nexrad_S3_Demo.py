@@ -38,7 +38,7 @@ from pyproj import Geod #this is used to convert range/azimuth to lat/lon
 
 import matplotlib.axes as maxes
 
-def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar_name,slat,slon):
+def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data_wind,station_data_direction,ts_selected,station_name,radar_name,slat,slon):
     start_date = dtetme.datetime(start_date1.year,start_date1.month,start_date1.day,start_date1.hour)
     end_date = dtetme.datetime(end_date1.year,end_date1.month,end_date1.day,end_date1.hour)
     
@@ -90,18 +90,47 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                            #fig, ax = plt.subplots(figsize=(20, 20))
                            # Plot the data!
                            date_filter = station_data[ts_selected['start']:ts_selected['end']]
-                           ax1.bar(date_filter.index,date_filter,width=0.01)
-                           ax1.axvline(x=dt,linewidth=4, color='r')
-                           plt.ylabel('Precipiation (mm)', fontsize=30)
-                           plt.xlabel('Hour', fontsize=30)
-                           plt.xticks(fontsize=30,rotation=40)
-                           plt.yticks(fontsize=30)
-                           plt.ylim([0,4.5])
+                           date_filter_temp = station_data_temp[ts_selected['start']:ts_selected['end']]
+                           date_filter_wind = station_data_wind[ts_selected['start']:ts_selected['end']]
+                           date_filter_direction = station_data_direction[ts_selected['start']:ts_selected['end']]
+                           ax1 = plt.gca()
+                           
+                           
+                          
+                           
+                           #plot temps
+                           ax_temp = plt.twinx()
+                           ax_temp.plot(np.arange(0,len(date_filter_temp.index)),date_filter_temp,marker="o", linestyle="-",color='m',linewidth=10)
+                           ax_temp.set_ylabel('Temperature ($^\circ$C)',fontsize=30)
+                           ax_temp.tick_params(axis='both', which='major', labelsize=30)
+                           
+                           #plot precip
+                           ax1.bar(np.arange(0,len(date_filter.index)),date_filter,width=0.1)
+                           #ax1.axvline(x=dt,linewidth=4, color='r')
+                           ax1.set_ylabel('Precipiation (mm)', fontsize=30)
+                           ax1.set_xlabel('Hour', fontsize=30)
+                           ax1.tick_params(axis='both', which='major', labelsize=30)
+                           #ax1.set_xticks(fontsize=30,rotation=40)
+                           #ax1.set_yticks(fontsize=30)
+                           ax1.set_ylim([0,4.5])
                            ax1.grid()
-                           date_form = DateFormatter("%H:%M")
-                           ax1.xaxis.set_major_formatter(date_form)
-                            #ax1.set_title('Precipitation Pulse Tracker',fontsize=40,pad=10)
-        
+                           #plot wind speed
+                           #ax1.plot(date_filter_direction.index, wind_speed, linewidth=2, color='blue')
+                           arrow_len = 2
+                           for k,theta in enumerate(np.radians(date_filter_direction)):
+                               dx = arrow_len * np.cos(theta)
+                               dy = arrow_len * np.sin(theta) * ax_temp.get_data_ratio()
+                               x, y = k, date_filter_temp.iloc[k]
+                               ax_temp.annotate("",
+                                       xy=(x+ dx, y+dy), xycoords='data',
+                                       xytext=(x, y), textcoords='data',
+                                       arrowprops=dict(arrowstyle="-|>", linewidth=5)
+                                       )
+                           # ax1.set_xticklabels(date_filter_temp.index)
+                           # date_form = DateFormatter("%H:%M")
+                           # ax1.xaxis.set_major_formatter(date_form)
+                           
+                                    
                         # Use MetPy to read the file
                        f = Level2File(obj.get()['Body'])
                        sweep = 0
@@ -384,13 +413,13 @@ def pull_radar(start_date1,end_date1,station_data,ts_selected,station_name,radar
                        maxi = round(np.max(arr),1)
                        lowanom, highanom = (mini, maxi)
                        newmap = center_colormap(lowanom, highanom, center=0)
-                       lowlims = {'Z500':2850,'SLP':900,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':mini}
-                       highlims = {'Z500':5700,'SLP':1050,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':maxi}
+                       lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':mini}
+                       highlims = {'Z500':5700,'SLP':1025,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':maxi}
         
-                       contourstart = {'Z500':3000,'SLP':900,'IVT':0,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
+                       contourstart = {'Z500':3000,'SLP':975,'IVT':0,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
                        contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAdv':maxi/6}
         
-                       cbarstart = {'Z500':3000,'SLP':980,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':mini}
+                       cbarstart = {'Z500':3000,'SLP':975,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':mini}
                        cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAdv':maxi/6}
         
                        colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':newmap,'Z850':'turbo','SLPAnom':newmap,'850TAdv':'coolwarm'}
