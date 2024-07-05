@@ -100,13 +100,13 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            
                            #plot temps
                            ax_temp = plt.twinx()
-                           ax_temp.plot(np.arange(0,len(date_filter_temp.index)),date_filter_temp,marker="o", linestyle="-",color='m',linewidth=10)
+                           ax_temp.plot(date_filter_temp.index,date_filter_temp,marker="o", linestyle="-",color='r',linewidth=7)
                            ax_temp.set_ylabel('Temperature ($^\circ$C)',fontsize=30)
                            ax_temp.tick_params(axis='both', which='major', labelsize=30)
                            
                            #plot precip
-                           ax1.bar(np.arange(0,len(date_filter.index)),date_filter,width=0.1)
-                           #ax1.axvline(x=dt,linewidth=4, color='r')
+                           bar1 = ax1.bar(date_filter.index,date_filter,width=0.01)
+                           ax1.axvline(x=dt,linewidth=4, color='m')
                            ax1.set_ylabel('Precipiation (mm)', fontsize=30)
                            ax1.set_xlabel('Hour', fontsize=30)
                            ax1.tick_params(axis='both', which='major', labelsize=30)
@@ -114,21 +114,50 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            #ax1.set_yticks(fontsize=30)
                            ax1.set_ylim([0,4.5])
                            ax1.grid()
+                           
+                           
+                           date_filter_direction_text = date_filter_direction.copy()
+                           
+                           
+                          
+                           date_filter_direction_text[(date_filter_direction>=157.5) & (date_filter_direction <202.5)] = 'N'
+                           date_filter_direction_text[(date_filter_direction>=202.5) & (date_filter_direction <247.5)] = 'NE'
+                           date_filter_direction_text[(date_filter_direction>=247.5) & (date_filter_direction <292.5)] = 'E'
+                           date_filter_direction_text[(date_filter_direction>=292.5) & (date_filter_direction <337.5)] = 'SE'
+                           date_filter_direction_text[(date_filter_direction>=337.5) & (date_filter_direction <22.5)] = 'S'
+                           date_filter_direction_text[(date_filter_direction>=22.5) & (date_filter_direction <67.5)] = 'SW'
+                           date_filter_direction_text[(date_filter_direction>=67.5) & (date_filter_direction <112.5)] = 'W'
+                           date_filter_direction_text[(date_filter_direction>=112.5) & (date_filter_direction <157.5)] = 'NW'
+                           for rect in np.arange(0,len(bar1)):
+                               height = bar1[rect].get_height()
+                               ax1.text(bar1[rect].get_x() + bar1[rect].get_width() / 2.0, height,date_filter_direction_text[rect], ha='center', va='bottom',fontsize=20)
+
+
+                           # u = date_filter_wind * np.sin(np.radians(date_filter_direction))
+                           # v = date_filter_wind * np.cos(np.radians(date_filter_direction))
+                           
+                           # prop = dict(frac=0.1,shrink=0.05)
+
+                           
+                           # for t, ws, wd, uu, vv in zip(date_filter[date_filter > 0].index, date_filter[date_filter > 0], date_filter_direction[date_filter[date_filter > 0].index], u, v):
+                           #     #ax1.arrow(t, ws, uu*0.01, vv*0.01, head_width=0.076, head_length=0.005, fc='r', ec='r')
+                           #      ax1.annotate('', xy=(t + timedelta(hours=uu*0.1), ws + vv*0.1), xytext=(t, ws),
+                           #                    arrowprops=prop)
                            #plot wind speed
                            #ax1.plot(date_filter_direction.index, wind_speed, linewidth=2, color='blue')
-                           arrow_len = 2
-                           for k,theta in enumerate(np.radians(date_filter_direction)):
-                               dx = arrow_len * np.cos(theta)
-                               dy = arrow_len * np.sin(theta) * ax_temp.get_data_ratio()
-                               x, y = k, date_filter_temp.iloc[k]
-                               ax_temp.annotate("",
-                                       xy=(x+ dx, y+dy), xycoords='data',
-                                       xytext=(x, y), textcoords='data',
-                                       arrowprops=dict(arrowstyle="-|>", linewidth=5)
-                                       )
+                           # arrow_len = 2
+                           # for k,theta in enumerate(np.radians(date_filter_direction)):
+                           #     dx = arrow_len * np.cos(theta)
+                           #     dy = arrow_len * np.sin(theta) * ax_temp.get_data_ratio()
+                           #     x, y = k, date_filter_temp.iloc[k]
+                           #     ax_temp.annotate("",
+                           #             xy=(x+ dx, y+dy), xycoords='data',
+                           #             xytext=(x, y), textcoords='data',
+                           #             arrowprops=dict(arrowstyle="-|>", linewidth=5)
+                           #             )
                            # ax1.set_xticklabels(date_filter_temp.index)
-                           # date_form = DateFormatter("%H:%M")
-                           # ax1.xaxis.set_major_formatter(date_form)
+                           date_form = DateFormatter("%H:%M")
+                           ax1.xaxis.set_major_formatter(date_form)
                            
                                     
                         # Use MetPy to read the file
@@ -158,10 +187,10 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
         
         
         
-                       bot_left_lon = 360+rLON - 4
-                       top_right_lon = 360+rLON + 4
-                       bot_left_lat = rLAT - 4
-                       top_right_lat = rLAT + 4
+                       bot_left_lon = 360+rLON - 7
+                       top_right_lon = 360+rLON + 7
+                       bot_left_lat = rLAT - 7
+                       top_right_lat = rLAT + 7
         
                          ######################################################################
                          # Plot the data
@@ -298,6 +327,10 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            Vvapor = gridfile.variables['VFLXQV'][:]
                            merra = np.sqrt(Uvapor**2 + Vvapor**2)
                            merra_slp = gridfile2.variables['SLP'][:]/100
+                           
+                           
+                           gridlat2 = gridfile2.variables['lat'][:]
+                           gridlon2 = gridfile2.variables['lon'][:]
                        elif metvar == '850TAdv': #temperature advection
                            UT = gridfile.variables['U850'][:]
                            VT = gridfile.variables['V850'][:]
@@ -311,6 +344,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            merra=-(UT*(np.gradient(T,axis=1)/gradx)+VT*(np.gradient(T,axis=0)/grady))*3600
                        elif metvar == 'SLP': 
                            merra = gridfile.variables['SLP'][:]/100
+                           
                        elif metvar == '850T':
                            merra = gridfile.variables['T850'][:]
                        
@@ -319,26 +353,56 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                        
                        #windu
-                       file_wind = nc.Dataset('G:/NCFR Thesis/NCFR_Thesis/wind.nc',mode='r')
-                       wu_1 = file_wind['u10']
-                       wv_1 = file_wind['v10']
-                       wind_t = file_wind['time']
+                       #file_wind = nc.Dataset('G:/NCFR Thesis/NCFR_Thesis/wind.nc',mode='r')
                        
-                       wlatu = file_wind['latitude'][:]
-                       wlonu = file_wind['longitude'][:]-180
-                       initial = datetime(dt.year, dt.month, dt.day, dt.hour)
-                       ini =  datetime(1900, 1, 1, 0)
-                       wind_time = [ini + timedelta(hours=int(i)) for i in wind_t[:]]
+                       if metvar != 'IVT':
+                           uwind = gridfile.variables['U10M'][:]
+                           vwind = gridfile.variables['V10M'][:]
+                           
+                           windspeed = (uwind ** 2 + vwind**2)**0.5
                        
-                       feb_index = [i == initial for i in wind_time]
-                       wu = np.squeeze(wu_1[feb_index,:,:]) 
-                       wv = np.squeeze(wv_1[feb_index,:,:])
-                     #     merra = np.sqrt(Uvapor**2 + Vvapor**2)
-                       gridfile.close()
-                       file_wind.close()
                        
-                     
-                       merra = np.squeeze(merra)
+                           latlims = np.logical_and(gridlat2 > latmin, gridlat2 < latmax)
+                           latind = np.where(latlims)[0]
+                           gridlatreduced = gridlat[latind]
+                         #reduce lon
+                           lonlims = np.logical_and(gridlon2 > lonmin, gridlon2 < lonmax)
+                           lonind = np.where(lonlims)[0]
+                           gridlonreduced = gridlon2[lonind]
+                         #reduce pressure
+                         
+                           merrareducedu = uwind[:,latind,:]
+                           merrareduced_u = merrareducedu[:,:,lonind]
+                           merrareducedv = vwind[:,latind,:]
+                           merrareduced_v = merrareducedv[:,:,lonind]
+                           merrareducedw = windspeed[:,latind,:]
+                           merrareduced_w = merrareducedw[:,:,lonind]
+                     #   uu = gridfile2['U10M'][:]
+                     #   vv = gridfile2['V10M'][:]
+                     #   wu_1 = file_wind['u10']
+                     #   wv_1 = file_wind['v10']
+                     #   wind_t = file_wind['time']
+                       
+                     #   wlatu = file_wind['latitude'][:]
+                     #   wlonu = file_wind['longitude'][:]-180
+                     #   initial = datetime(dt.year, dt.month, dt.day, dt.hour)
+                     #   ini =  datetime(1900, 1, 1, 0)
+                     #   wind_time = [ini + timedelta(hours=int(i)) for i in wind_t[:]]
+                       
+                     #   feb_index = [i == initial for i in wind_time]
+                     #   wu = np.squeeze(wu_1[feb_index,:,:]) 
+                     #   wv = np.squeeze(wv_1[feb_index,:,:])
+                     # #     merra = np.sqrt(Uvapor**2 + Vvapor**2)
+                     #   gridfile.close()
+                       #file_wind.close()
+                           merrareduced_u = np.squeeze(merrareduced_u)
+                           merrareduced_v = np.squeeze(merrareduced_v)
+                           merrareduced_w = np.squeeze(merrareduced_w)
+                           
+                           merrareduced_u_h = merrareduced_u[dt.hour,:,:]
+                           merrareduced_v_h = merrareduced_v[dt.hour,:,:]
+                           
+                           
                        
         
                      #%% REDUCE LAT AND LON TO DESIRED AREA
@@ -355,29 +419,42 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                      #reduce pressure
                        merrareduced = merra[:,latind,:]
                        merrareduced = merrareduced[:,:,lonind]
+                       merra = np.squeeze(merra)
                        
-                       merrareduced_slp = merra_slp[:,latind,:]
-                       merrareduced_slp = merrareduced_slp[:,:,lonind]
+                       ##################################SLP#################################
+                       #reduce lat
+                       if metvar == 'IVT':
+                           latlims = np.logical_and(gridlat2 > latmin, gridlat2 < latmax)
+                           latind = np.where(latlims)[0]
+                           gridlatreduced = gridlat2[latind]
+                           #reduce lon
+                           lonlims = np.logical_and(gridlon2 > lonmin, gridlon2 < lonmax)
+                           lonind = np.where(lonlims)[0]
+                           gridlonreduced = gridlon2[lonind]
+                             
+                           merrareduced_slp = merra_slp[:,latind,:]
+                           merrareduced_slp = merrareduced_slp[:,:,lonind]
+                           arr_slp = merrareduced_slp[dt.hour,:,:]
                        
                        #isolate to hour
                        
                        arr = merrareduced[dt.hour,:,:]
-                       arr_slp = merrareduced_slp[dt.hour,:,:]
+                       
                        
                        #reduce wind
                      
-                       latlims_u = np.logical_and(wlatu > latmin, wlatu < latmax)
-                       lonlims_u = np.logical_and(wlonu > lonmin, wlonu < lonmax)
-                       latind = np.where(latlims_u)[0]
+                       # latlims_u = np.logical_and(wlatu > latmin, wlatu < latmax)
+                       # lonlims_u = np.logical_and(wlonu > lonmin, wlonu < lonmax)
+                       # latind = np.where(latlims_u)[0]
                        
-                       lonind = np.where(lonlims_u)[0]
-                       windtotu = wu[latind,:]
-                       windtotu = windtotu[:,lonind]
-                       windtotv = wv[latind,:]
-                       windtotv = windtotv[:,lonind]
+                       # lonind = np.where(lonlims_u)[0]
+                       # windtotu = wu[latind,:]
+                       # windtotu = windtotu[:,lonind]
+                       # windtotv = wv[latind,:]
+                       # windtotv = windtotv[:,lonind]
                        
                       
-                       windspeed = (windtotu ** 2 + windtotv**2)**0.5
+                      # windspeed = (windtotu ** 2 + windtotv**2)**0.5
                        
                       #  #reduce lat windv
                       #  wvlat = windv['latitude'][:]
@@ -492,10 +569,10 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        gl.xlabel_style = {'size': 25}
                        gl.ylabel_style = {'size': 25}
                      # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
-                       wlat_filter=wlatu[(wlatu>latmin) & (wlatu<latmax)]
-                       wlon_filter=wlonu[(wlonu>lonmin) & (wlonu<lonmax)]
+                       # wlat_filter=wlatu[(wlatu>latmin) & (wlatu<latmax)]
+                       # wlon_filter=wlonu[(wlonu>lonmin) & (wlonu<lonmax)]
                        lon, lat = np.meshgrid(gridlonreduced,gridlatreduced)
-                       lonb,latb = np.meshgrid(wlon_filter,wlat_filter)
+                       # lonb,latb = np.meshgrid(wlon_filter,wlat_filter)
                      
                        if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
                            ax2.set_extent([bot_left_lon, top_right_lon, bot_left_lat, top_right_lat], crs=ccrs.PlateCarree())
@@ -538,12 +615,11 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        mps2knots = 1.944
                        if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
                            if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                               ax2.quiver(wlon_filter,wlat_filter,windtotu,windtotv,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
+                               ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
                                #ax2.barbs(wlon_filter,wlat_filter,windtotu,windtotv,length=6.7,linewidth=3.5,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
                            else:
-                               ax2.quiver(wlon_filter,wlat_filter,windtotu,windtotv,transform=ccrs.PlateCarree(),regrid_shape=20)
+                               ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20)
                                #ax2.barbs(wlon_filter,wlat_filter,windtotu,windtotv,length=5,linewidth=3,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
-                       
                        fig.tight_layout()
                        var=var+1
                        if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):

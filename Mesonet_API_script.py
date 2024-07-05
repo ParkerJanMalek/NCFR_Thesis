@@ -178,11 +178,12 @@ for i in station_name_list:
 
     # resample to only the hourly observations. For inter-hourly observations, the mean of these values is taken
     station_data_hourly = station_data_precip.resample('60min').mean()
-    station_data_hourly_t = station_data_temp.resample('60min').mean()
+    station_data_hourly_t = station_data_temp.resample('15min').mean()
     station_data_hourly_w = station_data_wind.resample('60min').mean()
     station_data_hourly_d = station_data_direction.resample('60min').first()
     station_data_hourly.to_csv('hourly_rainfalls_'+station_name+'.csv')
     station_data_hourly[station_data_hourly.isnull()] = 0
+   # station_data_hourly_t = station_data_hourly_t[station_data_hourly_t.isnull()]
     #station_data_hourly_t[station_data_hourly_t.isnull()] = 0
     #station_data_hourly_w[station_data_hourly_w.isnull()] = 0
     #station_data_hourly[station_data_hourly <=0.02500] = 0
@@ -317,7 +318,7 @@ for i in station_name_list:
     
     
 
-    ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_6,ts_7]
+    ts_total = [ts_1]
     event_classification = []
     for i in ts_total:
         event_classification.append([i['synoptic_event'],i['pulse_event'],str(i['start'].month) +"-"+ str(i['start'].day) +"-"+ str(i['start'].hour),str(i['end'].month) +"-"+ str(i['end'].day) +"-"+ str(i['end'].hour),np.round(i['event_total'],1),np.round(i['event_avg'],1),np.round(np.max(i['event_rainfall']),1),i['end']-i['start']])
@@ -329,7 +330,7 @@ for i in station_name_list:
     #plot all pulse events
     fig = plt.figure(figsize=(40, 20))
     multimodal= 1
-    for i in ts_ams:
+    for i in ts_total:
         
         start_date = i['start']
         end_date = i['end']
@@ -344,6 +345,19 @@ for i in station_name_list:
         if os.path.exists(outdirck):
             shutil.rmtree(outdirck)
         os.mkdir(outdirck)
+        
+        start_date1 = i['start']
+        end_date1 = i['end']
+        station_data = station_data_hourly
+        station_data_temp = station_data_hourly
+        station_data_wind = station_data_hourly_t
+        station_data_direction = station_data_hourly_d
+        ts_selected = i
+        station_name= station_name
+        radar_name = 'KBBX'
+        slat = station_lat
+        slon = station_lon
+        
         radar.pull_radar(i['start'], i['end'],station_data_hourly,station_data_hourly_t,station_data_hourly_w,station_data_hourly_d,i,station_name,'KBBX',station_lat,station_lon)
         # MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
         # # print(i)
