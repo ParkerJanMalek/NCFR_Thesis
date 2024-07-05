@@ -262,6 +262,7 @@ for i in station_name_list:
         event['event_total'] = np.sum(event['event_rainfall'][event['start']:event['end'] ]) 
         event['event_avg'] = np.mean(event['event_rainfall'][event['start']:event['end'] ]) 
     ts_1 = pulse_split[0]
+    ts_1['end'] = pd.Timestamp('2017-2-4-00',tz='UTC')
     ts_1['synoptic_event'] = 1
     ts_1['pulse_event'] = 1
     adjust_events(ts_1) 

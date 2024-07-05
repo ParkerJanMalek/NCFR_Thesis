@@ -132,30 +132,6 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                                height = bar1[rect].get_height()
                                ax1.text(bar1[rect].get_x() + bar1[rect].get_width() / 2.0, height,date_filter_direction_text[rect], ha='center', va='bottom',fontsize=20)
 
-
-                           # u = date_filter_wind * np.sin(np.radians(date_filter_direction))
-                           # v = date_filter_wind * np.cos(np.radians(date_filter_direction))
-                           
-                           # prop = dict(frac=0.1,shrink=0.05)
-
-                           
-                           # for t, ws, wd, uu, vv in zip(date_filter[date_filter > 0].index, date_filter[date_filter > 0], date_filter_direction[date_filter[date_filter > 0].index], u, v):
-                           #     #ax1.arrow(t, ws, uu*0.01, vv*0.01, head_width=0.076, head_length=0.005, fc='r', ec='r')
-                           #      ax1.annotate('', xy=(t + timedelta(hours=uu*0.1), ws + vv*0.1), xytext=(t, ws),
-                           #                    arrowprops=prop)
-                           #plot wind speed
-                           #ax1.plot(date_filter_direction.index, wind_speed, linewidth=2, color='blue')
-                           # arrow_len = 2
-                           # for k,theta in enumerate(np.radians(date_filter_direction)):
-                           #     dx = arrow_len * np.cos(theta)
-                           #     dy = arrow_len * np.sin(theta) * ax_temp.get_data_ratio()
-                           #     x, y = k, date_filter_temp.iloc[k]
-                           #     ax_temp.annotate("",
-                           #             xy=(x+ dx, y+dy), xycoords='data',
-                           #             xytext=(x, y), textcoords='data',
-                           #             arrowprops=dict(arrowstyle="-|>", linewidth=5)
-                           #             )
-                           # ax1.set_xticklabels(date_filter_temp.index)
                            date_form = DateFormatter("%H:%M")
                            ax1.xaxis.set_major_formatter(date_form)
                            
@@ -206,8 +182,6 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
         
         
         
-                     #ax.set_xticks([])
-                     #ax.set_yticks([])
                      # this declares a recentered projection for Pacific areas
                        usemap_proj = ccrs.PlateCarree(central_longitude=180)
                        usemap_proj._threshold /= 20.  # to make greatcircle smooth
@@ -216,9 +190,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        else:
                            ax = fig.add_subplot(2,4,1,projection=usemap_proj)
                        ax.axis('off')
-                     #ax = plt.axes(projection=usemap_proj)
-                     # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
-                       ax.set_extent([bot_left_lon, top_right_lon, bot_left_lat, top_right_lat], crs=ccrs.PlateCarree())
+                       ax.set_extent([bot_left_lon+3, top_right_lon-3, bot_left_lat+3, top_right_lat-3], crs=ccrs.PlateCarree())
         
                        geodetic = ccrs.Geodetic()
                        plate_carree = ccrs.PlateCarree(central_longitude=180)
@@ -234,11 +206,8 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        gl = ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
                        gl.top_labels = False
                        gl.right_labels = False
-                       gl.xlabel_style = {'size': 25}
-                       gl.ylabel_style = {'size': 25}
-                     # for var_data, colors, lbl in zip((ref),
-                     #                                                 ([ref_cmap]),
-                     #                                                 ("NWSReflectivity")):
+                       gl.xlabel_style = {'size': 35}
+                       gl.ylabel_style = {'size': 35}
         
                        var_range = ref_range
                        colors = ref_cmap
@@ -274,37 +243,19 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
         
                        cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=1.05)
                        cbar = fig.colorbar(a, cax=cax, orientation='vertical',pad=0.08)
-                       cbar.set_label(label=lbl,size=20,labelpad=0.5,fontweight='bold')
-                       cbar.ax.tick_params(labelsize=20)
-                       plt.setp(ax.get_xticklabels(), fontsize=20)
-                       plt.setp(ax.get_yticklabels(), fontsize=20)
-                       ax.tick_params(axis='x', labelsize=20)
-                       ax.tick_params(axis='y', labelsize=20)
-                       #ax.set_aspect('equal', 'datalim')
-                       # ax.set_xlim(-100, 100)
-                       # ax.set_ylim(-100, 100)
+                       cbar.set_label(label=lbl,size=40,labelpad=0.5,fontweight='bold')
+                       cbar.ax.tick_params(labelsize=40)
+                       plt.setp(ax.get_xticklabels(), fontsize=40)
+                       plt.setp(ax.get_yticklabels(), fontsize=40)
+                       ax.tick_params(axis='x', labelsize=40)
+                       ax.tick_params(axis='y', labelsize=40)
                        add_timestamp(ax, f.dt, y=0.02, high_contrast=False)
-                       # plt.suptitle(savestr[0:4]+' Level 2 Data '+ savestr.split("_")[0][4:]+"_"+savestr.split("_")[1], fontsize=50)
-                       # plt.tight_layout()
-                       # plt.show()
-                       # fig.savefig(savestr+".png")
-                       # i=i+1
                        ax.set_title('Radar Data on '+ savestr.split("_")[0][4:8]+"-"+savestr.split("_")[0][8:10]+"-"+savestr.split("_")[0][10:]+ " " +savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4], fontsize=40,pad=10)
                        plt.tight_layout()
-                      # plt.show()
-                      # return(fig)
         
         
         
-                     #############################################################################
-                     #outdir2 = 'G:/NCFR Thesis/NCFR_Thesis/IVT_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-                     # url = 'https://goldsmr4.gesdisc.eosdis.nasa.gov/data/MERRA2/M2T1NXSLV.5.12.4/2017/02/MERRA2_400.tavg1_2d_int_Nx.'+str(dt.year)+str("{:02d}".format(dt.month))+str("{:02d}".format(dt.day))+'.nc4'
-                     # fileupload= wget.download(url,out="")
-                     #"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/MERRA2/Daily_and_Subdaily/IVT_hourly/MERRA2.README.pdf D:\PSU Thesis\data\"Research Statement High-Intensity Precipitation.docx
-                     #"scp malek@circe.rc.pdx.edu:/vol/share/climate_lab2/Parker/Papers/"Research Statement High-Intensity Precipitation.docx" C:\Users\malekP\
-                     #%% IMPORT EXTREME DAYS DATA
-                     # change directory and import SOM data from .mat file
-                     #mat_dir='I:\\Emma\\FIROWatersheds\\Data\\SOMs\\SomOutput'
+                   
                      # define lat, lon region of data for plotting
                        latmin, latmax = (15.5,65.5)
                        lonmin, lonmax = (-170.25,-105.75)
@@ -349,11 +300,6 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            merra = gridfile.variables['T850'][:]
                        
                        
-                       #gridfile2.close()
-                       
-                       
-                       #windu
-                       #file_wind = nc.Dataset('G:/NCFR Thesis/NCFR_Thesis/wind.nc',mode='r')
                        
                        if metvar != 'IVT':
                            uwind = gridfile.variables['U10M'][:]
@@ -377,24 +323,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            merrareduced_v = merrareducedv[:,:,lonind]
                            merrareducedw = windspeed[:,latind,:]
                            merrareduced_w = merrareducedw[:,:,lonind]
-                     #   uu = gridfile2['U10M'][:]
-                     #   vv = gridfile2['V10M'][:]
-                     #   wu_1 = file_wind['u10']
-                     #   wv_1 = file_wind['v10']
-                     #   wind_t = file_wind['time']
-                       
-                     #   wlatu = file_wind['latitude'][:]
-                     #   wlonu = file_wind['longitude'][:]-180
-                     #   initial = datetime(dt.year, dt.month, dt.day, dt.hour)
-                     #   ini =  datetime(1900, 1, 1, 0)
-                     #   wind_time = [ini + timedelta(hours=int(i)) for i in wind_t[:]]
-                       
-                     #   feb_index = [i == initial for i in wind_time]
-                     #   wu = np.squeeze(wu_1[feb_index,:,:]) 
-                     #   wv = np.squeeze(wv_1[feb_index,:,:])
-                     # #     merra = np.sqrt(Uvapor**2 + Vvapor**2)
-                     #   gridfile.close()
-                       #file_wind.close()
+                     
                            merrareduced_u = np.squeeze(merrareduced_u)
                            merrareduced_v = np.squeeze(merrareduced_v)
                            merrareduced_w = np.squeeze(merrareduced_w)
@@ -440,37 +369,6 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                        arr = merrareduced[dt.hour,:,:]
                        
-                       
-                       #reduce wind
-                     
-                       # latlims_u = np.logical_and(wlatu > latmin, wlatu < latmax)
-                       # lonlims_u = np.logical_and(wlonu > lonmin, wlonu < lonmax)
-                       # latind = np.where(latlims_u)[0]
-                       
-                       # lonind = np.where(lonlims_u)[0]
-                       # windtotu = wu[latind,:]
-                       # windtotu = windtotu[:,lonind]
-                       # windtotv = wv[latind,:]
-                       # windtotv = windtotv[:,lonind]
-                       
-                      
-                      # windspeed = (windtotu ** 2 + windtotv**2)**0.5
-                       
-                      #  #reduce lat windv
-                      #  wvlat = windv['latitude'][:]
-                      #  wvlon = windv['longitude'][:] -360
-                      #  latlims_v = np.logical_and(wvlat > latmin, wvlat < latmax)
-                      #  lonlims_v = np.logical_and(wvlon > lonmin, wvlon < lonmax)
-                      #  # latind = np.where(latlims)[0]
-                      #  # gridlatreduced_wvlat = wvlat[latind]
-                      #  # lonind = np.where(lonlims)[0]
-                      #  # gridlonreduced_wvlon = wvlon[lonind]
-                       
-                      #  wv_final1 = wv[:,latlims_v,:]
-                      #  wv_final = wv_final1[:,:,lonlims_v]
-                      #  wu_final1 = wu[:,latlims_u,:]
-                      #  wu_final = wu_final1[:,:,lonlims_u]
-                     #print(np.amin(merrareduced),np.amax(merrareduced))
         
         
                      #%% CREATE ANOMALY MAP
@@ -513,33 +411,10 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                      #Start Plotting Data
         
                      # Plot the data using matplotlib and cartopy
-                     #n=1 #testing
-                     #for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
-                     #for n in np.arange(1,24):
-        
+                    
         
                        datetitle =  plottitle[metvar]+" on " + str(dt.year)+"-"+str(dt.month)+"-"+str(dt.day)+ "-" + str(dt.hour) +":00 UTC"
                        figtitle = plottitle[metvar]+" on " + str(dt.year)+"-"+str(dt.month)+"-"+str(dt.day)+ "-" + str(dt.hour)
-                     # Set the figure size, projection, and extent
-                     #fig.add_subplot
-        
-        
-        
-                     # ax1 = fig.add_subplot(211)
-                     # #fig, ax = plt.subplots(figsize=(20, 20))
-                     # # Plot the data!
-                     # date_filter = station_data[ts_selected['start']:ts_selected['end']]
-                     # ax1.bar(date_filter.index,date_filter,width=0.01)
-                     # ax1.axvline(x=dt,linewidth=4, color='r')
-                     # plt.ylabel('Precipiation (mm)', fontsize=25)
-                     # plt.xticks(fontsize=15,rotation=40)
-                     # plt.yticks(fontsize=15)
-                     # ax1.grid()
-                     # date_form = DateFormatter("%m-%d-%Y-%H")
-                     # ax1.xaxis.set_major_formatter(date_form)
-        
-        
-                     # ax1.set_title(datetitle, fontsize=40)
         
         
         
@@ -566,103 +441,43 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        gl = ax2.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
                        gl.top_labels = False
                        gl.right_labels = False
-                       gl.xlabel_style = {'size': 25}
-                       gl.ylabel_style = {'size': 25}
+                       gl.xlabel_style = {'size': 35}
+                       gl.ylabel_style = {'size': 35}
                      # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
-                       # wlat_filter=wlatu[(wlatu>latmin) & (wlatu<latmax)]
-                       # wlon_filter=wlonu[(wlonu>lonmin) & (wlonu<lonmax)]
+                      
                        lon, lat = np.meshgrid(gridlonreduced,gridlatreduced)
-                       # lonb,latb = np.meshgrid(wlon_filter,wlat_filter)
-                     
                        if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
                            ax2.set_extent([bot_left_lon, top_right_lon, bot_left_lat, top_right_lat], crs=ccrs.PlateCarree())
                        else:
                            ax2.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
                        ax2.plot(360+slon,slat,marker='o', color='red', markersize=15, transform=ccrs.PlateCarree())
-                       
+                       ax2.set_title(datetitle,fontsize=40,pad=10)
                      #define area threshold for basemap
                        area_thresh = 1E4
                      #create equidistant cylindrical projection basemap
         
-                     # usemap_proj = ccrs.PlateCarree(central_longitude=180)
-                     # usemap_proj._threshold /= 20.  # to make greatcircle smooth
-                     # ax = fig.add_subplot(212,projection=usemap_proj)
-                     # ax.axis('off')
-                     #ax = plt.axes(projection=usemap_proj)
-                     # set appropriate extents: (lon_min, lon_max, lat_min, lat_max)
-                     # Set contour levels, then draw the plot and a colorbar
+                     #Set contour levels, then draw the plot and a colorbar
                        
                        contour_c = '0.1'
                        contour_w = 0.7
-                     #ax2.scatter(-120.9,39.5,color='r',marker='*',linewidths=5)
-                      # colorm = ax2.pcolor(lon,lat,arr,shading='auto',cmap=colormap[metvar],vmin=lowlims[metvar],vmax=highlims[metvar])
                        mp =  ax2.contourf(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar])
-                       #mp2 = ax2.contour(lon,lat,arr,colors='black',linewidths=contour_w,levels=np.arange(contourstart[metvar],highlims[metvar]+1,contourint[metvar]),transform=ccrs.PlateCarree())
-                       if metvar == "IVT":
-                           mp3 = ax2.contour(lon,lat,arr_slp,colors='gray',linewidths=1.5,alpha = 0.55,levels=np.arange(900,1050,1),transform=ccrs.PlateCarree())
-                           ax2.clabel(
-                            mp3,  # Typically best results when labelling line contours.
-                            levels = np.arange(900,1050,4),
-                            colors=['black'],
-                            manual=False,  # Automatic placement vs manual placement.
-                            inline=True,  # Cut the line where the label will be placed.
-                            fmt=' {:.0f} '.format,  # Labes as integers, with some extra space.
-                        )
+                       
                        cbar = plt.colorbar(mp,ticks=np.arange(cbarstart[metvar],highlims[metvar],cbarint[metvar]),orientation='vertical',pad=0.08)
-                       cbar.set_label(cbarlabs[metvar],fontsize=20,labelpad=0.5,fontweight='bold')
-                       cbar.ax.tick_params(labelsize=20)
-                       ax2.set_title(figtitle,fontsize=40,pad=10)
+                       cbar.set_label(cbarlabs[metvar],fontsize=40,labelpad=0.5,fontweight='bold')
+                       cbar.ax.tick_params(labelsize=40)
                        mps2knots = 1.944
                        if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
                            if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                               ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
-                               #ax2.barbs(wlon_filter,wlat_filter,windtotu,windtotv,length=6.7,linewidth=3.5,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
+                               ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20) 
                            else:
                                ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20)
-                               #ax2.barbs(wlon_filter,wlat_filter,windtotu,windtotv,length=5,linewidth=3,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
                        fig.tight_layout()
                        var=var+1
-                       if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                           fig.suptitle('Precipitation Pulse ' + str(dt.year)+"-"+str(dt.month)+"-"+str(dt.day)+ "-" + str(dt.hour) +":00 UTC" , fontsize=60,fontweight="bold",y=0.98)
-                       else:
-                           fig.suptitle('Precipitation Pulse Tracker', fontsize=60,fontweight="bold",y=0.98)
+                        # if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
+                        #     #fig.suptitle('Precipitation Pulse ' + str(dt.year)+"-"+str(dt.month)+"-"+str(dt.day)+ "-" + str(dt.hour) +":00 UTC" , fontsize=60,fontweight="bold",y=0.98)
+                        # else:
+                        #     fig.suptitle('Precipitation Pulse Tracker', fontsize=60,fontweight="bold",y=0.98)
                            
-                       #wind speed test
-                       
-                       # wind = (windtotu**2 + windtotv**2)**0.5
-                       # metvar1='SLP'
-                       # fig1 = plt.figure(figsize=(20, 20))
-
-                       # ax3 = fig1.add_subplot(1,1,1,projection=usemap_proj)
-                       # border_c = '0.4'
-                       # border_w = 12
-                       # ax3.coastlines(resolution="110m",linewidth=1)
-                       # ax3.gridlines(linestyle='--',color='black')
-                       # ax3.add_feature(cfeature.LAND)
-                       # ax3.add_feature(cfeature.OCEAN,color="white")
-                       # ax3.add_feature(cfeature.COASTLINE)
-                       # ax3.add_feature(cfeature.BORDERS, linestyle=':', zorder=3)
-                       # ax3.add_feature(cfeature.STATES, linestyle=':', zorder=3)
-                       # gl = ax3.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
-                       # gl.top_labels = False
-                       # gl.right_labels = False
-                       # gl.xlabel_style = {'size': 25}
-                       # gl.ylabel_style = {'size': 25}
-                       
-
-                       # ax3.set_extent([bot_left_lon, top_right_lon, bot_left_lat, top_right_lat], crs=ccrs.PlateCarree())
-                        
-                       # mp1 =  ax3.contourf(wlon_filter,wlat_filter, wind, np.arange(np.min(wind),np.max(wind),2.5), transform=ccrs.PlateCarree(),cmap=colormap['SLP'])
-
-                       # ax3.quiver(wlon_filter,wlat_filter,windtotu,windtotv,transform=ccrs.PlateCarree(),regrid_shape=20) #sizes=dict(emptybarb=0.001, spacing=0.1, height=0.5)
-                       # mp21 = ax3.contour(lon,lat,arr,colors=contour_c,linewidths=contour_w,levels=np.arange(contourstart[metvar1],highlims[metvar1]+1,contourint[metvar1]))
-                       
-                       # cbar = plt.colorbar(mp1,ticks=np.arange(cbarstart[metvar1],highlims[metvar1],cbarint[metvar1]),orientation='vertical',pad=0.08)
-                       # cbar.set_label('m/s',fontsize=20,labelpad=0.5,fontweight='bold')
-                       # cbar.ax.tick_params(labelsize=20)
-                       # fig1.suptitle('Precipitation Pulse ' + str(dt.year)+"-"+str(dt.month)+"-"+str(dt.day)+ "-" + str(dt.hour) +":00 UTC" , fontsize=60,fontweight="bold",y=0.98)
-                       
-                       #fig1.savefig(outdir+savestr+"windtest.png")
                        
                    #plt.show()
                    if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
