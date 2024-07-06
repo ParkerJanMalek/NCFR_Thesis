@@ -79,8 +79,9 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        fig = plt.figure(figsize=(60, 20))
                     
                    var=0
-                   
+                   plot_text = ['(b)','(c)','(d)']
                    for metvar in metvars:
+                       pt = plot_text[var]
                        savestr = obj.key.split("/")[-1]
                        
                        
@@ -101,17 +102,15 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            #plot temps
                            ax_temp = plt.twinx()
                            ax_temp.plot(date_filter_temp.index,date_filter_temp,marker="o", linestyle="-",color='r',linewidth=7)
-                           ax_temp.set_ylabel('Temperature ($^\circ$C)',fontsize=30)
-                           ax_temp.tick_params(axis='both', which='major', labelsize=30)
+                           ax_temp.set_ylabel('Temperature ($^\circ$C)',fontsize=50)
+                           ax_temp.tick_params(axis='both', which='major', labelsize=50)
                            
                            #plot precip
                            bar1 = ax1.bar(date_filter.index,date_filter,width=0.01)
                            ax1.axvline(x=dt,linewidth=4, color='m')
-                           ax1.set_ylabel('Precipiation (mm)', fontsize=30)
-                           ax1.set_xlabel('Hour', fontsize=30)
-                           ax1.tick_params(axis='both', which='major', labelsize=30)
-                           #ax1.set_xticks(fontsize=30,rotation=40)
-                           #ax1.set_yticks(fontsize=30)
+                           ax1.set_ylabel('Precipiation (mm)', fontsize=50)
+                           ax1.set_xlabel('Hour', fontsize=50)
+                           ax1.tick_params(axis='both', which='major', labelsize=50)
                            ax1.set_ylim([0,4.5])
                            ax1.grid()
                            
@@ -130,7 +129,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            date_filter_direction_text[(date_filter_direction>=112.5) & (date_filter_direction <157.5)] = 'NW'
                            for rect in np.arange(0,len(bar1)):
                                height = bar1[rect].get_height()
-                               ax1.text(bar1[rect].get_x() + bar1[rect].get_width() / 2.0, height,date_filter_direction_text[rect], ha='center', va='bottom',fontsize=20)
+                               ax1.text(bar1[rect].get_x() + bar1[rect].get_width() / 2.0, height,date_filter_direction_text[rect], ha='center', va='bottom',fontsize=35,fontweight='bold')
 
                            date_form = DateFormatter("%H:%M")
                            ax1.xaxis.set_major_formatter(date_form)
@@ -163,10 +162,10 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
         
         
         
-                       bot_left_lon = 360+rLON - 7
-                       top_right_lon = 360+rLON + 7
-                       bot_left_lat = rLAT - 7
-                       top_right_lat = rLAT + 7
+                       bot_left_lon = 360+rLON - 12
+                       top_right_lon = 360+rLON + 12
+                       bot_left_lat = rLAT - 12
+                       top_right_lat = rLAT + 12
         
                          ######################################################################
                          # Plot the data
@@ -190,8 +189,8 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        else:
                            ax = fig.add_subplot(2,4,1,projection=usemap_proj)
                        ax.axis('off')
-                       ax.set_extent([bot_left_lon+3, top_right_lon-3, bot_left_lat+3, top_right_lat-3], crs=ccrs.PlateCarree())
-        
+                       ax.set_extent([bot_left_lon+8, top_right_lon-8, bot_left_lat+8, top_right_lat-8], crs=ccrs.PlateCarree())
+                 
                        geodetic = ccrs.Geodetic()
                        plate_carree = ccrs.PlateCarree(central_longitude=180)
         
@@ -202,6 +201,10 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        ax.add_feature(cfeature.COASTLINE)
                        ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=2)
                        ax.add_feature(cfeature.STATES, linestyle=':', zorder=2)
+                       
+                       ax.text(0.05, 0.05, '(a)',fontsize=40,fontweight ='bold', transform=ax.transAxes)
+                       
+                       
                         # plot grid lines
                        gl = ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
                        gl.top_labels = False
@@ -391,7 +394,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':mini}
                        highlims = {'Z500':5700,'SLP':1025,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':maxi}
         
-                       contourstart = {'Z500':3000,'SLP':975,'IVT':0,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
+                       contourstart = {'Z500':3000,'SLP':975,'IVT':100,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
                        contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAdv':maxi/6}
         
                        cbarstart = {'Z500':3000,'SLP':975,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':mini}
@@ -438,6 +441,9 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        ax2.add_feature(cfeature.COASTLINE)
                        ax2.add_feature(cfeature.BORDERS, linestyle=':', zorder=3)
                        ax2.add_feature(cfeature.STATES, linestyle=':', zorder=3)
+                       
+                       ax2.text(0.05, 0.05, pt,fontsize=40,fontweight ='bold', transform=ax2.transAxes)
+                       
                        gl = ax2.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
                        gl.top_labels = False
                        gl.right_labels = False
@@ -452,6 +458,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            ax2.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
                        ax2.plot(360+slon,slat,marker='o', color='red', markersize=15, transform=ccrs.PlateCarree())
                        ax2.set_title(datetitle,fontsize=40,pad=10)
+                       
                      #define area threshold for basemap
                        area_thresh = 1E4
                      #create equidistant cylindrical projection basemap

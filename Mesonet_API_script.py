@@ -319,7 +319,7 @@ for i in station_name_list:
     
     
 
-    ts_total = [ts_1]
+    ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
     event_classification = []
     for i in ts_total:
         event_classification.append([i['synoptic_event'],i['pulse_event'],str(i['start'].month) +"-"+ str(i['start'].day) +"-"+ str(i['start'].hour),str(i['end'].month) +"-"+ str(i['end'].day) +"-"+ str(i['end'].hour),np.round(i['event_total'],1),np.round(i['event_avg'],1),np.round(np.max(i['event_rainfall']),1),i['end']-i['start']])
@@ -337,11 +337,6 @@ for i in station_name_list:
         end_date = i['end']
         print(start_date)
         print(end_date)
-        # outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\IVT_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-        # if os.path.exists(outdirck):
-        #     shutil.rmtree(outdirck)
-        # os.mkdir(outdirck)
-        #merra.pull_merra(i['start'], i['end'],station_data_hourly,i,station_name,station_lon,station_lat)
         outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
         if os.path.exists(outdirck):
             shutil.rmtree(outdirck)
@@ -360,8 +355,7 @@ for i in station_name_list:
         slon = station_lon
         
         radar.pull_radar(i['start'], i['end'],station_data_hourly,station_data_hourly_t,station_data_hourly_w,station_data_hourly_d,i,station_name,'KBBX',station_lat,station_lon)
-        # MRMS.map_event(start_date, end_date, station_lon, station_lat,station_name,station_data_hourly,i)
-        # # print(i)
+       
         date_filter = station_data_hourly[i['start']:i['end']]
         date_filter_cumsum = date_filter.cumsum()
         ax = fig.add_subplot(3,3,multimodal)
@@ -384,49 +378,54 @@ for i in station_name_list:
     fig.savefig(station_name + "_Pulses"+ '.jpeg')
     plt.close('all')
     
-    fig1,ax1 = plt.subplots(figsize=(20, 12.5))
-    date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
-    ax1.plot(date_filter.index,date_filter)
-    fig1.suptitle('Hourly Precipitation at Oroville Airport ('+station_name.upper() + ") \n in February 2017", fontsize=30)
-    plt.ylabel('Precipiation (mm)', fontsize=25)
-    plt.xlabel('Date', fontsize=30,labelpad=-0.5)
-    plt.xticks(fontsize=15,rotation=45)
-    plt.yticks(fontsize=30)
-    ax1.grid()
-    date_form = DateFormatter("%m-%d-%Y-%H")
-    ax1.xaxis.set_major_formatter(date_form)
-    ax2 = fig1.gca()
-    ax2.set_ylim([0, None])
-    fig1.tight_layout() 
-    fig1.savefig('KOVE'+'.jpeg')
-    plt.close('all')
+    
+   
+    
+    
+    
+    # fig1,ax1 = plt.subplots(figsize=(20, 12.5))
     
     cwe_series = {'CDEC_MFF_2002_2023_V2':'CDEC_MFF_FBS_2840','CDEC_NFF_2002_2023':'CDEC_NFF_BRS_3560','CDEC_UYB_2002_2023':'CDEC_UYB_PKC_3714'}
     cwe_titles = ['Forbestown','Brush Creek','Pike County']
-    title_i = 0
+    colors = ['#377eb8', '#ff7f00', '#4daf4a',
+                  '#f781bf', '#a65628', '#984ea3',
+                  '#999999', '#e41a1c', '#dede00']
+    title_i = 1
+    fig2,ax2 = plt.subplots(figsize=(40, 20))
+    plot_text = ['(a)','(b)','(c)']
     for i in cwe_series.keys():
-    
+        pt = plot_text[title_i-1]
         additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
         site = cwe_series[i].split('_')[2]
-        fig2,ax2 = plt.subplots(figsize=(20, 12.5))
+        #fig2,ax2 = plt.subplots(figsize=(20, 12.5))
+        #ax2 = fig2.add_subplot(1,1,1)
         date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
         dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
-        
-        ax2.plot(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0])
-        fig2.suptitle('Hourly Precipitation at Oroville Dam ('+cwe_titles[title_i]+ ") \n in February 2017", fontsize=30)
-        plt.ylabel('Precipiation (mm)', fontsize=25)
-        plt.xlabel('Date', fontsize=30,labelpad=-0.5)
-        plt.xticks(fontsize=15,rotation=45)
-        plt.yticks(fontsize=30)
-        ax2.grid()
-        date_form = DateFormatter("%m-%d-%Y-%H")
-        ax2.xaxis.set_major_formatter(date_form)
-        ax3 = fig2.gca()
-        ax3.set_ylim([0, None])
-        fig2.tight_layout() 
-        fig2.savefig(site.upper()+'.jpeg')
+        ax2.plot(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0],linewidth=7,color=colors[title_i-1],label=cwe_titles[title_i-1])
+        #fig2.suptitle(cwe_titles[title_i-1], fontsize=30)
+        #ax2.set_title(str(cwe_titles[title_i-1])  , fontsize=40)
+        #date_form = DateFormatter("%d-%Y-%H")
+        #fig2.savefig(site.upper()+'.jpeg')
         title_i = title_i + 1
+        
         #plt.close('all')
+    date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+    ax2.plot(date_filter.index,date_filter,colors[3],linewidth=7,label="Oroville Municipal Airport")
+    fig2.suptitle("Hourly Precipitation Record near \n Oroville Dam in February 2017", fontsize=50,fontweight='bold')
+    plt.ylabel('Precipiation (mm)', fontsize=70)
+    plt.xlabel('Day of Month', fontsize=70)
+    plt.xticks(fontsize=60)
+    plt.yticks(fontsize=60)
+    ax2.grid()
+    plt.legend(fontsize=39,loc='upper right')
+    #ax2.set_title('Oroville Municipal Airport' , fontsize=40)
+    date_form = DateFormatter("%d")
+    ax2.xaxis.set_major_formatter(date_form)
+    ax2 = fig2.gca()
+    ax2.set_ylim([0, None])
+    #fig2.tight_layout(rect=[0.05, 0.05, 1, 0.93]) 
+    fig2.savefig('Precip_Time_Series_Oroville'+'.jpeg')
+    plt.close('all')
 
         
         
