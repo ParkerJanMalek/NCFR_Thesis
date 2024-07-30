@@ -119,14 +119,14 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            
                            
                           
-                           date_filter_direction_text[(date_filter_direction>=157.5) & (date_filter_direction <202.5)] = 'N'
-                           date_filter_direction_text[(date_filter_direction>=202.5) & (date_filter_direction <247.5)] = 'NE'
-                           date_filter_direction_text[(date_filter_direction>=247.5) & (date_filter_direction <292.5)] = 'E'
-                           date_filter_direction_text[(date_filter_direction>=292.5) & (date_filter_direction <337.5)] = 'SE'
-                           date_filter_direction_text[(date_filter_direction>=337.5) & (date_filter_direction <22.5)] = 'S'
-                           date_filter_direction_text[(date_filter_direction>=22.5) & (date_filter_direction <67.5)] = 'SW'
-                           date_filter_direction_text[(date_filter_direction>=67.5) & (date_filter_direction <112.5)] = 'W'
-                           date_filter_direction_text[(date_filter_direction>=112.5) & (date_filter_direction <157.5)] = 'NW'
+                           date_filter_direction_text[(date_filter_direction>=157.5) & (date_filter_direction <202.5)] = 'S'
+                           date_filter_direction_text[(date_filter_direction>=202.5) & (date_filter_direction <247.5)] = 'SW'
+                           date_filter_direction_text[(date_filter_direction>=247.5) & (date_filter_direction <292.5)] = 'W'
+                           date_filter_direction_text[(date_filter_direction>=292.5) & (date_filter_direction <337.5)] = 'NW'
+                           date_filter_direction_text[(date_filter_direction>=337.5) | (date_filter_direction <22.5)] = 'N'
+                           date_filter_direction_text[(date_filter_direction>=22.5) & (date_filter_direction <67.5)] = 'NE'
+                           date_filter_direction_text[(date_filter_direction>=67.5) & (date_filter_direction <112.5)] = 'E'
+                           date_filter_direction_text[(date_filter_direction>=112.5) & (date_filter_direction <157.5)] = 'SE'
                            for rect in np.arange(0,len(bar1)):
                                height = bar1[rect].get_height()
                                ax1.text(bar1[rect].get_x() + bar1[rect].get_width() / 2.0, height,date_filter_direction_text[rect], ha='center', va='bottom',fontsize=35,fontweight='bold')
@@ -473,11 +473,11 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        cbar.set_label(cbarlabs[metvar],fontsize=40,labelpad=0.5,fontweight='bold')
                        cbar.ax.tick_params(labelsize=40)
                        mps2knots = 1.944
-                       if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
-                           if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                               ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20) 
-                           else:
-                               ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20)
+                       # if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
+                           # if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
+                           #     ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20) 
+                           # else:
+                           #     ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20)
                        fig.tight_layout()
                        var=var+1
                         # if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
