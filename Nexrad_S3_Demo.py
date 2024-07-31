@@ -391,13 +391,13 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        maxi = round(np.max(arr),1)
                        lowanom, highanom = (mini, maxi)
                        newmap = center_colormap(lowanom, highanom, center=0)
-                       lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':252,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':mini}
+                       lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':240,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':mini}
                        highlims = {'Z500':5700,'SLP':1025,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':maxi}
         
-                       contourstart = {'Z500':3000,'SLP':975,'IVT':100,'300W':5,'850T':250,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
+                       contourstart = {'Z500':3000,'SLP':975,'IVT':100,'300W':5,'850T':240,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
                        contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAdv':maxi/6}
         
-                       cbarstart = {'Z500':3000,'SLP':975,'IVT':0,'300W':0,'850T':250,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':mini}
+                       cbarstart = {'Z500':3000,'SLP':975,'IVT':0,'300W':0,'850T':240,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':mini}
                        cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAdv':maxi/6}
         
                        colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':newmap,'Z850':'turbo','SLPAnom':newmap,'850TAdv':'coolwarm'}
