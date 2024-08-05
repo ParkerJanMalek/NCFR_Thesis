@@ -47,8 +47,8 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
     bucket = s3.Bucket('noaa-nexrad-level2')
     outdir = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
     for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
-        fig_creation = ['paper','presentation']
-        paper_dates = ts_selected['event_rainfall'].index[np.argsort(ts_selected['event_rainfall'])][::-1][0:1]
+        fig_creation = ['paper']
+        paper_dates = ts_selected['event_rainfall'].index[np.argsort(ts_selected['event_rainfall'])][::-1][0:4]
         
         for ii in fig_creation:
            
@@ -74,7 +74,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                    metvars = ['IVT','850T','SLP']#]
                    #metvar = '300W'
                    if ii == "paper":
-                       fig = plt.figure(figsize=(40, 40))
+                       fig = plt.figure(figsize=(20, 60))
                    else:
                        fig = plt.figure(figsize=(60, 20))
                     
@@ -185,7 +185,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        usemap_proj = ccrs.PlateCarree(central_longitude=180)
                        usemap_proj._threshold /= 20.  # to make greatcircle smooth
                        if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                           ax = fig.add_subplot(2,2,1,projection=usemap_proj)
+                           ax = fig.add_subplot(4,1,1,projection=usemap_proj)
                        else:
                            ax = fig.add_subplot(2,4,1,projection=usemap_proj)
                        ax.axis('off')
@@ -254,7 +254,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        ax.tick_params(axis='y', labelsize=40)
                        add_timestamp(ax, f.dt, y=0.02, high_contrast=False)
                        ax.set_title('Radar Data on '+ savestr.split("_")[0][4:8]+"-"+savestr.split("_")[0][8:10]+"-"+savestr.split("_")[0][10:]+ " " +savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4], fontsize=40,pad=10)
-                       plt.tight_layout()
+                       fig.tight_layout()
         
         
         
@@ -427,7 +427,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                        
                        if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                           ax2 = fig.add_subplot(2,2,2+var,projection=usemap_proj)
+                           ax2 = fig.add_subplot(4,1,2+var,projection=usemap_proj)
                        else:
                            ax2 = fig.add_subplot(2,4,2+var,projection=usemap_proj)
                        ax2.set_global()
@@ -457,7 +457,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        else:
                            ax2.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
                        ax2.plot(360+slon,slat,marker='o', color='red', markersize=15, transform=ccrs.PlateCarree())
-                       ax2.set_title(datetitle,fontsize=40,pad=10)
+                       ax2.set_title(datetitle,fontsize=40,pad=45)
                        
                      #define area threshold for basemap
                        area_thresh = 1E4
@@ -488,7 +488,11 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                    #plt.show()
                    if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                        fig.savefig(outdir+savestr+"_"+ii+".png")
+                        #fig.savefig(outdir+savestr+"_"+ii+".png")
+                        with open(outdir+savestr+"_"+ii+".pickle", 'wb') as f: # should be 'wb' rather than 'w'
+                            #pickle.dump(fig, f) 
+                            pickle.dump(fig,f)
+
                        
                    if ii == "presentation":
                         fig.savefig(outdir+savestr+"_"+ii+".png")

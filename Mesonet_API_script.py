@@ -261,11 +261,14 @@ for i in station_name_list:
         event['event_perc'] = event['event_perc'][event['start']:event['end'] ]
         event['event_total'] = np.sum(event['event_rainfall'][event['start']:event['end'] ]) 
         event['event_avg'] = np.mean(event['event_rainfall'][event['start']:event['end'] ]) 
+        
     ts_1 = pulse_split[0]
     ts_1['end'] = pd.Timestamp('2017-2-4-00',tz='UTC')
     ts_1['synoptic_event'] = 1
     ts_1['pulse_event'] = 1
     adjust_events(ts_1) 
+    ts1_pd = ts_1['event_rainfall'].index[np.argsort(ts_1['event_rainfall'])][::-1][0:4].sort_values()
+    
     
     ts_2 = pulse_split[1].copy()
     ts_2['start'] = pd.Timestamp('2017-2-6-00',tz='UTC')
@@ -273,12 +276,14 @@ for i in station_name_list:
     ts_2['synoptic_event'] = 2
     ts_2['pulse_event'] = 2
     adjust_events(ts_2) 
+    ts2_pd = ts_2['event_rainfall'].index[np.argsort(ts_2['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_3 = pulse_split[1].copy()
     ts_3['start']  = pd.Timestamp('2017-2-6-22',tz='UTC')
     ts_3['synoptic_event'] = 2
     ts_3['pulse_event'] = 3
     adjust_events(ts_3) 
+    ts3_pd = ts_3['event_rainfall'].index[np.argsort(ts_3['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_4 = pulse_split[2].copy()
     ts_4['start'] = pd.Timestamp('2017-2-8-07',tz='UTC')
@@ -286,23 +291,27 @@ for i in station_name_list:
     ts_4['synoptic_event'] = 3
     ts_4['pulse_event'] = 4
     adjust_events(ts_4) 
+    ts4_pd = ts_4['event_rainfall'].index[np.argsort(ts_4['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_5 = pulse_split[2].copy()
     ts_5['start'] = pd.Timestamp('2017-2-9-08',tz='UTC')
     ts_5['synoptic_event'] = 3
     ts_5['pulse_event'] = 5
     adjust_events(ts_5) 
+    ts5_pd = ts_5['event_rainfall'].index[np.argsort(ts_5['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_6 = pulse_split[3].copy()
     ts_6['synoptic_event'] = 4
     ts_6['pulse_event'] = 6
     adjust_events(ts_6) 
+    ts6_pd = ts_6['event_rainfall'].index[np.argsort(ts_6['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_7 = pulse_split[4].copy()
     ts_7['start'] = pd.Timestamp('2017-2-16-06',tz='UTC')
     ts_7['synoptic_event'] = 5
     ts_7['pulse_event'] = 7
     adjust_events(ts_7) 
+    ts7_pd = ts_7['event_rainfall'].index[np.argsort(ts_7['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_8 = pulse_split[5].copy()
     ts_8['start'] = pd.Timestamp('2017-2-17-05',tz='UTC')
@@ -310,23 +319,28 @@ for i in station_name_list:
     ts_8['synoptic_event'] = 6
     ts_8['pulse_event'] = 8
     adjust_events(ts_8) 
+    ts8_pd = ts_8['event_rainfall'].index[np.argsort(ts_8['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_9 = pulse_split[5].copy()
     ts_9['start'] = pd.Timestamp('2017-2-19-06',tz='UTC')
     ts_9['synoptic_event'] = 7
     ts_9['pulse_event'] = 9
     adjust_events(ts_9) 
+    ts9_pd = ts_9['event_rainfall'].index[np.argsort(ts_9['event_rainfall'])][::-1][0:4].sort_values()
     
+    
+    paper_dates = [ts1_pd,ts2_pd,ts3_pd,ts4_pd,ts5_pd,ts6_pd,ts7_pd,ts8_pd,ts9_pd]
     
 
     ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
     event_classification = []
+    
     for i in ts_total:
         event_classification.append([i['synoptic_event'],i['pulse_event'],str(i['start'].month) +"-"+ str(i['start'].day) +"-"+ str(i['start'].hour),str(i['end'].month) +"-"+ str(i['end'].day) +"-"+ str(i['end'].hour),np.round(i['event_total'],1),np.round(i['event_avg'],1),np.round(np.max(i['event_rainfall']),1),i['end']-i['start']])
     ec = pd.DataFrame(event_classification)
     ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)',"Maxium Precipitation (mm)",'Day Difference']
-    
     ec.to_csv('Event_Classification.csv',index=False)
+    
     ts_ams = [ts_1]
     #plot all pulse events
     fig = plt.figure(figsize=(40, 20))
@@ -401,7 +415,7 @@ for i in station_name_list:
         #ax2 = fig2.add_subplot(1,1,1)
         date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
         dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
-        ax2.plot(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0],linewidth=7,color=colors[title_i-1],label=cwe_titles[title_i-1])
+        ax2.bar(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0],width=0.15,color=colors[title_i-1],label=cwe_titles[title_i-1])
         #fig2.suptitle(cwe_titles[title_i-1], fontsize=30)
         #ax2.set_title(str(cwe_titles[title_i-1])  , fontsize=40)
         #date_form = DateFormatter("%d-%Y-%H")
@@ -410,7 +424,7 @@ for i in station_name_list:
         
         #plt.close('all')
     date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
-    ax2.plot(date_filter.index,date_filter,colors[3],linewidth=7,label="Oroville Municipal Airport")
+    ax2.bar(date_filter.index,date_filter,color=colors[3],width=0.15,label="Oroville Municipal Airport")
     fig2.suptitle("Hourly Precipitation Record near \n Oroville Dam in February 2017", fontsize=50,fontweight='bold')
     plt.ylabel('Precipiation (mm)', fontsize=70)
     plt.xlabel('Day of Month', fontsize=70)
