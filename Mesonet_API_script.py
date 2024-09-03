@@ -23,6 +23,7 @@ import cartopy.crs as ccrs
 import MRMS_data_pull as MRMS
 import Nexrad_S3_Demo as radar
 import MERRAII_IVT as merra
+import combine_figures as cb
 
 
 # stage four quanitiative precipitation (hourly radar product)
@@ -332,7 +333,7 @@ for i in station_name_list:
     paper_dates = [ts1_pd,ts2_pd,ts3_pd,ts4_pd,ts5_pd,ts6_pd,ts7_pd,ts8_pd,ts9_pd]
     
 
-    ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_6,ts_7,ts_8,ts_9]
+    ts_total = [ts_1]#[ts_1,ts_2,ts_3,ts_4,ts_5,ts_7,ts_8,ts_9]
     event_classification = []
     
     for i in ts_total:
@@ -343,8 +344,9 @@ for i in station_name_list:
     
     ts_ams = [ts_1]
     #plot all pulse events
-    fig = plt.figure(figsize=(40, 20))
+    fig = plt.figure(figsize=(20, 20))
     multimodal= 1
+    pp_date = 0
     for i in ts_total:
         
         start_date = i['start']
@@ -370,13 +372,15 @@ for i in station_name_list:
         
         radar.pull_radar(i['start'], i['end'],station_data_hourly,station_data_hourly_t,station_data_hourly_w,station_data_hourly_d,i,station_name,'KBBX',station_lat,station_lon)
        
+        cb.combine_figures(paper_dates[pp_date],outdirck)
+        
         date_filter = station_data_hourly[i['start']:i['end']]
         date_filter_cumsum = date_filter.cumsum()
-        ax = fig.add_subplot(3,3,multimodal)
+        ax = fig.add_subplot(4,2,multimodal)
         ax.bar(date_filter.index,date_filter,width=0.01)
-        ax.set_title('Event #' + str(multimodal)  , fontsize=40)
-        plt.xticks(fontsize=25,rotation=30)
-        plt.yticks(fontsize=25)
+        ax.set_title('Event #' + str(multimodal)  , fontsize=30)
+        plt.xticks(fontsize=20,rotation=30)
+        plt.yticks(fontsize=20)
         plt.ylim([0,4.5])
         ax.grid()
         date_form = DateFormatter("%d:%H")
@@ -385,10 +389,11 @@ for i in station_name_list:
         #fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
         print(multimodal)
         multimodal = multimodal + 1
+        pp_date = pp_date + 1
     fig.tight_layout(rect=[0.05, 0.05, 1, 0.93])   
-    fig.supylabel('Precipiation (mm)', fontsize=50)
-    fig.supxlabel('Day:Hour', fontsize=50)
-    fig.suptitle("February 2017 Rainfall Pulses at Oroville Municipal Airport",fontsize=50)
+    fig.supylabel('Precipiation (mm)', fontsize=35)
+    fig.supxlabel('Day:Hour', fontsize=35)
+    fig.suptitle("February 2017 Rainfall Pulses at Oroville Municipal Airport",fontsize=35)
     fig.savefig(station_name + "_Pulses"+ '.jpeg')
     plt.close('all')
     
@@ -400,7 +405,7 @@ for i in station_name_list:
     # fig1,ax1 = plt.subplots(figsize=(20, 12.5))
     
     cwe_series = {'CDEC_MFF_2002_2023_V2':'CDEC_MFF_FBS_2840','CDEC_NFF_2002_2023':'CDEC_NFF_BRS_3560','CDEC_UYB_2002_2023':'CDEC_UYB_PKC_3714'}
-    cwe_titles = ['Forbestown','Brush Creek','Pike County']
+    cwe_titles = ['Forbestown (2840 ft)','Brush Creek (3560 ft)','Pike County (3714 ft)']
     colors = ['#377eb8', '#ff7f00', '#4daf4a',
                   '#f781bf', '#a65628', '#984ea3',
                   '#999999', '#e41a1c', '#dede00']
@@ -423,8 +428,9 @@ for i in station_name_list:
         title_i = title_i + 1
         
         #plt.close('all')
+    fig2,ax2 = plt.subplots(figsize=(40, 20))
     date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
-    ax2.bar(date_filter.index,date_filter,color=colors[3],width=0.15,label="Oroville Municipal Airport")
+    ax2.bar(date_filter.index,date_filter,color=colors[3],width=0.15,label="Oroville Municipal Airport (194 ft)")
     fig2.suptitle("Hourly Precipitation Record near \n Oroville Dam in February 2017", fontsize=50,fontweight='bold')
     plt.ylabel('Precipiation (mm)', fontsize=70)
     plt.xlabel('Day of Month', fontsize=70)
@@ -438,8 +444,26 @@ for i in station_name_list:
     ax2 = fig2.gca()
     ax2.set_ylim([0, None])
     #fig2.tight_layout(rect=[0.05, 0.05, 1, 0.93]) 
-    fig2.savefig('Precip_Time_Series_Oroville'+'.jpeg')
+    fig2.savefig('Precip_Time_Series_Oroville_alone'+'.jpeg')
     plt.close('all')
+    
+    fig3,ax3 = plt.subplots(figsize=(40, 20))
+    #date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+    ax3.bar(ts_9['event_rainfall'].index[21:],ts_9['event_rainfall'][21:],color=colors[0],width=0.01,label="Pulse Example")
+    fig3.suptitle("Precipitation Pulse Inspection Example", fontsize=50,fontweight='bold')
+    plt.ylabel('Precipiation (mm)', fontsize=70)
+    plt.xlabel('Day:Hour', fontsize=70)
+    plt.xticks(fontsize=60)
+    plt.yticks(fontsize=60)
+    ax3.grid()
+    plt.legend(fontsize=39,loc='upper right')
+    #ax2.set_title('Oroville Municipal Airport' , fontsize=40)
+    date_form = DateFormatter("%d:%H")
+    ax3.xaxis.set_major_formatter(date_form)
+    ax3 = fig3.gca()
+    ax3.set_ylim([0, None])
+    #fig2.tight_layout(rect=[0.05, 0.05, 1, 0.93]) 
+    fig3.savefig('Precip_Pulse_Example'+'.jpeg')
 
         
         

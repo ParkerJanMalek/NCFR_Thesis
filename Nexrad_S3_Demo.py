@@ -22,6 +22,8 @@ import botocore
 from botocore.client import Config
 import matplotlib.pyplot as plt
 import matplotlib
+import metpy.calc as mpcalc
+from metpy.units import units
 from metpy.io import Level2File
 from metpy.plots import add_timestamp, ctables
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -31,6 +33,7 @@ from datetime import datetime, timedelta
 import datetime  as dtetme
 from matplotlib.dates import DayLocator, DateFormatter
 import pickle
+import xarray
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
@@ -64,22 +67,22 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                 #print(len(list(radar_object1)))
                 if len(list(radar_object1)) == 0:
                     radar_object1 = bucket.objects.filter(Prefix=str(dt.year) + '/' + month + '/' + day + '/KDAX/KDAX'+ str(dt.year) + month + day + '_'+hour)
-                fig = plt.figure(figsize=(40, 20))
+                #fig = plt.figure(figsize=(40, 20))
                 for obj in radar_object1:
         
         
                    #%% IMPORT MERRA2 DATA
                    # define metvar
                    metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAdv']
-                   metvars = ['IVT','850T','SLP']#]
+                   metvars = ['IVT','850T','SLP','850TAdv']#]
                    #metvar = '300W'
                    if ii == "paper":
-                       fig = plt.figure(figsize=(20, 60))
+                       fig = plt.figure(figsize=(10, 35))
                    else:
                        fig = plt.figure(figsize=(60, 20))
                     
                    var=0
-                   plot_text = ['(b)','(c)','(d)']
+                   plot_text = ['(b)','(c)','(d)','(e)']
                    for metvar in metvars:
                        pt = plot_text[var]
                        savestr = obj.key.split("/")[-1]
@@ -185,7 +188,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        usemap_proj = ccrs.PlateCarree(central_longitude=180)
                        usemap_proj._threshold /= 20.  # to make greatcircle smooth
                        if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                           ax = fig.add_subplot(4,1,1,projection=usemap_proj)
+                           ax = fig.add_subplot(5,1,1,projection=usemap_proj)
                        else:
                            ax = fig.add_subplot(2,4,1,projection=usemap_proj)
                        ax.axis('off')
@@ -196,6 +199,8 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
         
         
         
+                       ax.coastlines(resolution="110m",linewidth=1)
+                       ax.gridlines(linestyle='--',color='black')
                        ax.add_feature(cfeature.LAND)
                        ax.add_feature(cfeature.OCEAN,color="white")
                        ax.add_feature(cfeature.COASTLINE)
@@ -206,7 +211,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                        
                         # plot grid lines
-                       gl = ax.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+                       gl = ax.gridlines(draw_labels=False, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
                        gl.top_labels = False
                        gl.right_labels = False
                        gl.xlabel_style = {'size': 35}
@@ -243,17 +248,17 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        ax.plot(360+slon,slat,marker='o', color='red', markersize=20, transform=ccrs.PlateCarree())
         
                        divider = make_axes_locatable(ax)
-        
-                       cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=1.05)
-                       cbar = fig.colorbar(a, cax=cax, orientation='vertical',pad=0.08)
+                      
+                      # cax = divider.append_axes("right", size="5%", axes_class=maxes.Axes, pad=0.1)
+                       cbar = plt.colorbar(a, orientation='vertical',pad=0.08)
                        cbar.set_label(label=lbl,size=40,labelpad=0.5,fontweight='bold')
                        cbar.ax.tick_params(labelsize=40)
-                       plt.setp(ax.get_xticklabels(), fontsize=40)
-                       plt.setp(ax.get_yticklabels(), fontsize=40)
-                       ax.tick_params(axis='x', labelsize=40)
-                       ax.tick_params(axis='y', labelsize=40)
-                       add_timestamp(ax, f.dt, y=0.02, high_contrast=False)
-                       ax.set_title('Radar Data on '+ savestr.split("_")[0][4:8]+"-"+savestr.split("_")[0][8:10]+"-"+savestr.split("_")[0][10:]+ " " +savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4], fontsize=40,pad=10)
+                       #plt.setp(ax.get_xticklabels(), fontsize=40)
+                       #plt.setp(ax.get_yticklabels(), fontsize=40)
+                       #ax.tick_params(axis='x', labelsize=40)
+                       #ax.tick_params(axis='y', labelsize=40)
+                       #add_timestamp(ax, f.dt, y=0.02, high_contrast=False)
+                       #ax.set_title('Radar Data on '+ savestr.split("_")[0][4:8]+"-"+savestr.split("_")[0][8:10]+"-"+savestr.split("_")[0][10:]+ " " +savestr.split("_")[1][0:2]+":"+savestr.split("_")[1][2:4], fontsize=40,pad=10)
                        fig.tight_layout()
         
         
@@ -286,16 +291,22 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            gridlat2 = gridfile2.variables['lat'][:]
                            gridlon2 = gridfile2.variables['lon'][:]
                        elif metvar == '850TAdv': #temperature advection
-                           UT = gridfile.variables['U850'][:]
-                           VT = gridfile.variables['V850'][:]
-                           T = gridfile.variables['T850'][:]
-                           proj=ccrs.LambertConformal(central_longitude=-90)
-                           lon,lat=np.meshgrid(gridlon,gridlat)
-                           output=proj.transform_points(ccrs.PlateCarree(),lon,lat)
-                           x,y=output[:,:,0],output[:,:,1]
-                           gradx=np.gradient(x,axis=1)
-                           grady=np.gradient(y,axis=0)
-                           merra=-(UT*(np.gradient(T,axis=1)/gradx)+VT*(np.gradient(T,axis=0)/grady))*3600
+                           gftadv = xarray.open_dataset(filepath)
+                           UT = gftadv.U850
+                           VT = gftadv.V850
+                           T = gftadv.T850
+                           #dx, dy = mpcalc.lat_lon_grid_deltas(gridlon, gridlat)
+                           #proj=ccrs.LambertConformal(central_longitude=-90)
+                           #lon,lat=np.meshgrid(gridlon,gridlat)
+                           #output=proj.transform_points(ccrs.PlateCarree(central_longitude=180),lon,lat)
+                           #x,y=output[:,:,0],output[:,:,1]
+                           #gradx=np.gradient(x,axis=1)
+                           #grady=np.gradient(y,axis=0)
+                           #merra=-(UT*(np.gradient(T,axis=1)/gradx)+VT*(np.gradient(T,axis=0)/grady))*3600
+                          
+                           merra = np.array(mpcalc.advection(T, UT, VT)) * 60
+                          
+                            #merra = mpcalc.advection(T, u=UT, v=VT)
                        elif metvar == 'SLP': 
                            merra = gridfile.variables['SLP'][:]/100
                            
@@ -304,7 +315,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                        
                        
-                       if metvar != 'IVT':
+                       if metvar != 'IVT' and metvar != '850TAdv':
                            uwind = gridfile.variables['U10M'][:]
                            vwind = gridfile.variables['V10M'][:]
                            
@@ -387,20 +398,21 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                            return newmap
         
                      #%% DEFINE PLOTTING VARIABLES
-                       mini = round(np.min(arr),1)#0.002 *3600 #s to hour
-                       maxi = round(np.max(arr),1)
+                       mini = round(np.nanmin(arr),5)#0.002 *3600 #s to hour
+                       maxi = round(np.nanmax(arr),5)
+                      
                        lowanom, highanom = (mini, maxi)
-                       newmap = center_colormap(lowanom, highanom, center=0)
-                       lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':240,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':mini}
-                       highlims = {'Z500':5700,'SLP':1025,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':maxi}
+                       #newmap = center_colormap(lowanom, highanom, center=0)
+                       lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':240,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':-0.4}
+                       highlims = {'Z500':5700,'SLP':1025,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':0.4}
         
-                       contourstart = {'Z500':3000,'SLP':975,'IVT':100,'300W':5,'850T':240,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':mini}
-                       contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAdv':maxi/6}
+                       contourstart = {'Z500':3000,'SLP':975,'IVT':250,'300W':5,'850T':240,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':-0.4}
+                       contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAdv':0.1}
         
-                       cbarstart = {'Z500':3000,'SLP':975,'IVT':0,'300W':0,'850T':240,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':mini}
-                       cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAdv':maxi/6}
+                       cbarstart = {'Z500':3000,'SLP':975,'IVT':250,'300W':0,'850T':240,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':-0.4}
+                       cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAdv':0.1}
         
-                       colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':newmap,'Z850':'turbo','SLPAnom':newmap,'850TAdv':'coolwarm'}
+                       colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':'turbo','Z850':'turbo','SLPAnom':'turbo','850TAdv':'coolwarm'}
                        cbarlabs = {'Z500':'m','SLP':'hPa','IVT':'kg $\mathregular{m^{-1}}$ $\mathregular{s^{-1}}$','300W':'m/s','850T':'K','Z500Anom':r'$\mathbf{\sigma}$','Z850':'m','SLPAnom':r'$\mathbf{\sigma}$','850TAdv':'Degrees/hr'}
                        plottitle = {'Z500':'Z500','SLP':'SLP','IVT':'IVT','300W':'300 hPa Wind','850T':'850 hPa Temperature','Z500Anom':'Z500 Anomaly','Z850':'Z850','SLPAnom':'SLP Anomaly','850TAdv':'850 hPa Temperature Advection'}
                      #%% PLOT NODES from MATLAB
@@ -427,7 +439,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                        
                        if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                           ax2 = fig.add_subplot(4,1,2+var,projection=usemap_proj)
+                           ax2 = fig.add_subplot(5,1,2+var,projection=usemap_proj)
                        else:
                            ax2 = fig.add_subplot(2,4,2+var,projection=usemap_proj)
                        ax2.set_global()
@@ -444,7 +456,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        
                        ax2.text(0.05, 0.05, pt,fontsize=40,fontweight ='bold', transform=ax2.transAxes)
                        
-                       gl = ax2.gridlines(draw_labels=True, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
+                       gl = ax2.gridlines(draw_labels=False, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
                        gl.top_labels = False
                        gl.right_labels = False
                        gl.xlabel_style = {'size': 35}
@@ -457,7 +469,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        else:
                            ax2.set_extent([lonmin, lonmax, latmin, latmax], crs=ccrs.PlateCarree())
                        ax2.plot(360+slon,slat,marker='o', color='red', markersize=15, transform=ccrs.PlateCarree())
-                       ax2.set_title(datetitle,fontsize=40,pad=45)
+                       #ax2.set_title(datetitle,fontsize=40,pad=45)
                        
                      #define area threshold for basemap
                        area_thresh = 1E4
@@ -473,9 +485,9 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                        cbar.set_label(cbarlabs[metvar],fontsize=40,labelpad=0.5,fontweight='bold')
                        cbar.ax.tick_params(labelsize=40)
                        mps2knots = 1.944
-                       # if metvar=="850TAdv" or metvar=="SLP" or metvar == "850T":
-                           # if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
-                           #     ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20) 
+                       if metvar == "850T":
+                           if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
+                               ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20) 
                            # else:
                            #     ax2.quiver(lon,lat,merrareduced_u_h,merrareduced_v_h,transform=ccrs.PlateCarree(),regrid_shape=20)
                        fig.tight_layout()
@@ -492,6 +504,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                         with open(outdir+savestr+"_"+ii+".pickle", 'wb') as f: # should be 'wb' rather than 'w'
                             #pickle.dump(fig, f) 
                             pickle.dump(fig,f)
+                            #fig.savefig(outdir+savestr+"_"+ii+".png")
 
                        
                    if ii == "presentation":
