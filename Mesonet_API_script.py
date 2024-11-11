@@ -94,14 +94,14 @@ unit = ['degrees','temp|C','speed|mph','precip|mm']
 var = ['wind_direction','air_temp','wind_speed','precip_accum_one_hour']
 
 for i in station_name_list:
-    print(i)
+   # print(i)
     from datetime import datetime
     #bound = station_window[i]
     
     station_name = i
     station_data_out = {}
     for j in np.arange(0,len(unit)):
-        print(j)
+        #print(j)
         if unit[j] == 'degrees':
             
             args_por = {
@@ -131,7 +131,7 @@ for i in station_name_list:
         e = datetime.strptime(por_end[0:10],"%Y-%m-%d")
         por_start_fmt = datetime.strftime(datetime.strptime('2017-02-01',"%Y-%m-%d"),"%Y%m%d%H%S")
         por_end_fmt = datetime.strftime(datetime.strptime('2017-02-28',"%Y-%m-%d"),"%Y%m%d%H%S")
-        print(e.year-s.year)
+        #print(e.year-s.year)
         
         if unit[j] == 'degrees':
             
@@ -330,10 +330,10 @@ for i in station_name_list:
     ts9_pd = ts_9['event_rainfall'].index[np.argsort(ts_9['event_rainfall'])][::-1][0:4].sort_values()
     
     
-    paper_dates = [ts1_pd,ts2_pd,ts3_pd,ts4_pd,ts5_pd,ts6_pd,ts7_pd,ts8_pd,ts9_pd]
+    paper_dates = [ts1_pd,ts2_pd,ts3_pd,ts4_pd,ts5_pd,ts7_pd,ts8_pd,ts9_pd]
     
 
-    ts_total = [ts_1]#[ts_1,ts_2,ts_3,ts_4,ts_5,ts_7,ts_8,ts_9]
+    ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_7,ts_8,ts_9]
     event_classification = []
     
     for i in ts_total:
@@ -342,7 +342,7 @@ for i in station_name_list:
     ec.columns = ['Synoptic Event #','Pulse Event #','Event start date (UTC)','Event end date (UTC)','Total precipiation (mm)','Average precipiation (mm)',"Maxium Precipitation (mm)",'Day Difference']
     ec.to_csv('Event_Classification.csv',index=False)
     
-    ts_ams = [ts_1]
+    ts_ams = [ts_3]
     #plot all pulse events
     fig = plt.figure(figsize=(20, 20))
     multimodal= 1
@@ -351,12 +351,12 @@ for i in station_name_list:
         
         start_date = i['start']
         end_date = i['end']
-        print(start_date)
-        print(end_date)
+        #print(start_date)
+        #print(end_date)
         outdirck = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
-        if os.path.exists(outdirck):
-            shutil.rmtree(outdirck)
-        os.mkdir(outdirck)
+        # if os.path.exists(outdirck):
+        #     shutil.rmtree(outdirck)
+        # os.mkdir(outdirck)
         
         start_date1 = i['start']
         end_date1 = i['end']
@@ -370,9 +370,9 @@ for i in station_name_list:
         slat = station_lat
         slon = station_lon
         
-        radar.pull_radar(i['start'], i['end'],station_data_hourly,station_data_hourly_t,station_data_hourly_w,station_data_hourly_d,i,station_name,'KBBX',station_lat,station_lon)
+        #radar.pull_radar(i['start'], i['end'],station_data_hourly,station_data_hourly_t,station_data_hourly_w,station_data_hourly_d,i,station_name,'KBBX',station_lat,station_lon)
        
-        cb.combine_figures(paper_dates[pp_date],outdirck)
+        #cb.combine_figures(paper_dates[pp_date],outdirck)
         
         date_filter = station_data_hourly[i['start']:i['end']]
         date_filter_cumsum = date_filter.cumsum()
@@ -387,7 +387,7 @@ for i in station_name_list:
         ax.xaxis.set_major_formatter(date_form)
         
         #fig.savefig(station_name + "_"+args['vars'] +str(multimodal)+ '.jpeg')  
-        print(multimodal)
+        #print(multimodal)
         multimodal = multimodal + 1
         pp_date = pp_date + 1
     fig.tight_layout(rect=[0.05, 0.05, 1, 0.93])   
@@ -405,7 +405,7 @@ for i in station_name_list:
     # fig1,ax1 = plt.subplots(figsize=(20, 12.5))
     
     cwe_series = {'CDEC_MFF_2002_2023_V2':'CDEC_MFF_FBS_2840','CDEC_NFF_2002_2023':'CDEC_NFF_BRS_3560','CDEC_UYB_2002_2023':'CDEC_UYB_PKC_3714'}
-    cwe_titles = ['Forbestown (2840 ft)','Brush Creek (3560 ft)','Pike County (3714 ft)']
+    cwe_titles = ['Forbestown (866 m)','Brush Creek (1085 m)','Pike County (1132 m)']
     colors = ['#377eb8', '#ff7f00', '#4daf4a',
                   '#f781bf', '#a65628', '#984ea3',
                   '#999999', '#e41a1c', '#dede00']
@@ -428,7 +428,7 @@ for i in station_name_list:
         title_i = title_i + 1
         
         #plt.close('all')
-    fig2,ax2 = plt.subplots(figsize=(40, 20))
+    #fig2,ax2 = plt.subplots(figsize=(40, 20))
     date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
     ax2.bar(date_filter.index,date_filter,color=colors[3],width=0.15,label="Oroville Municipal Airport (194 ft)")
     fig2.suptitle("Hourly Precipitation Record near \n Oroville Dam in February 2017", fontsize=50,fontweight='bold')
@@ -437,19 +437,19 @@ for i in station_name_list:
     plt.xticks(fontsize=60)
     plt.yticks(fontsize=60)
     ax2.grid()
-    plt.legend(fontsize=39,loc='upper right')
+    plt.legend(fontsize=39,loc='upper left')
     #ax2.set_title('Oroville Municipal Airport' , fontsize=40)
     date_form = DateFormatter("%d")
     ax2.xaxis.set_major_formatter(date_form)
     ax2 = fig2.gca()
     ax2.set_ylim([0, None])
     #fig2.tight_layout(rect=[0.05, 0.05, 1, 0.93]) 
-    fig2.savefig('Precip_Time_Series_Oroville_alone'+'.jpeg')
+    fig2.savefig('Precip_Time_Series_Oroville'+'.jpeg')
     plt.close('all')
     
     fig3,ax3 = plt.subplots(figsize=(40, 20))
     #date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
-    ax3.bar(ts_9['event_rainfall'].index[21:],ts_9['event_rainfall'][21:],color=colors[0],width=0.01,label="Pulse Example")
+    ax3.bar(pulse_split[1]['event_rainfall'].index,pulse_split[1]['event_rainfall'],color=colors[0],width=0.01,label="Hourly Precipitation Totals (mm)")
     fig3.suptitle("Precipitation Pulse Inspection Example", fontsize=50,fontweight='bold')
     plt.ylabel('Precipiation (mm)', fontsize=70)
     plt.xlabel('Day:Hour', fontsize=70)
@@ -464,6 +464,42 @@ for i in station_name_list:
     ax3.set_ylim([0, None])
     #fig2.tight_layout(rect=[0.05, 0.05, 1, 0.93]) 
     fig3.savefig('Precip_Pulse_Example'+'.jpeg')
+    
+    
+    for i in np.arange(0,len(ts_total)):
+        fig4,ax4 = plt.subplots(figsize=(40, 20))
+        #date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+        bar4 = ax4.bar(ts_total[i]['event_rainfall'].index,ts_total[i]['event_rainfall'],color=colors[0],width=0.01)
+        fig4.suptitle("Pulse " + str(i+1), fontsize=50,fontweight='bold')
+        plt.ylabel('Precipiation (mm)', fontsize=70)
+        plt.xlabel('Day:Hour', fontsize=70)
+        plt.xticks(fontsize=60)
+        plt.yticks(fontsize=60)
+        ax4.grid()
+        plt.legend(fontsize=39,loc='upper right')
+        #ax2.set_title('Oroville Municipal Airport' , fontsize=40)
+        date_form = DateFormatter("%d:%H")
+        ax4.xaxis.set_major_formatter(date_form)
+        # Loop through the events in paper_dates[i] and plot vertical lines
+        #for j in np.arange(0, len(paper_dates[i])):
+        t = paper_dates[i]  # Get the list of event times for this paper
+            
+            # Loop over all timestamps in t and plot a vertical line for each
+        for k, timestamp in enumerate(t):
+            print(k)
+            print(timestamp)
+            color = ['m', 'r', 'g', 'b'][k % 4]  # Cycle through colors for up to 4 events
+            ax4.axvline(x=timestamp, linewidth=4, color=color)  # Plot vertical line at event timestamp
+            
+            # Add text above the vertical line
+            ax4.text(timestamp, ax4.get_ylim()[1] ,  # Place text just above the top of the plot
+                     str(k+1), ha='center', va='bottom', fontsize=45, fontweight='bold', color='k')
+
+            
+        ax4 = fig4.gca()
+        ax4.set_ylim([0, None])
+        #fig2.tight_layout(rect=[0.05, 0.05, 1, 0.93]) 
+        fig4.savefig('Precip_Pulse_Example_'+str(i)+'.jpeg')
 
         
         
