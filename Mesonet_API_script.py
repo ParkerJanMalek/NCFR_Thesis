@@ -20,9 +20,9 @@ import cartopy.crs as ccrs
 ######
 
 
-import MRMS_data_pull as MRMS
+#import MRMS_data_pull as MRMS
 import Nexrad_S3_Demo as radar
-import MERRAII_IVT as merra
+#import MERRAII_IVT as merra
 import combine_figures as cb
 
 
@@ -90,8 +90,8 @@ output_5_perc_data = 'G:\\NCFR Thesis\\NCFR_Thesis\\precip_threshold_dates\\'
 start_date = dtetme.datetime(2017,2,7,0)
 end_date = dtetme.datetime(2017,2,7,23)
 
-unit = ['degrees','temp|C','speed|mph','precip|mm']
-var = ['wind_direction','air_temp','wind_speed','precip_accum_one_hour']
+unit = ['degrees','temp|C','speed|mph','precip|mm','temp|C',]
+var = ['wind_direction','air_temp','wind_speed','precip_accum_one_hour','dew_point_temperature']
 
 for i in station_name_list:
    # print(i)
@@ -165,12 +165,12 @@ for i in station_name_list:
         dateTime = responseDict['STATION'][0]['OBSERVATIONS']['date_time']
         value_pull = responseDict['STATION'][0]['OBSERVATIONS'][args['vars']+'_set_1']
         
-        station_data_out[unit[j]] = pd.Series(value_pull,index=pd.to_datetime(dateTime))
-    
-    station_data_precip = station_data_out[unit[3]]
-    station_data_wind = station_data_out[unit[2]] 
-    station_data_temp = station_data_out[unit[1]]
-    station_data_direction = station_data_out[unit[0]]
+        station_data_out[j] = pd.Series(value_pull,index=pd.to_datetime(dateTime))
+    station_data_dew = station_data_out[4]
+    station_data_precip = station_data_out[3]
+    station_data_wind = station_data_out[2] 
+    station_data_temp = station_data_out[1]
+    station_data_direction = station_data_out[0]
         
     station_data_precip.to_csv('raw_rainfalls_'+station_name+'.csv')
         
@@ -180,6 +180,7 @@ for i in station_name_list:
     # resample to only the hourly observations. For inter-hourly observations, the mean of these values is taken
     station_data_hourly = station_data_precip.resample('60min').mean()
     station_data_hourly_t = station_data_temp.resample('15min').mean()
+    station_data_hourly_dew = station_data_dew.resample('15min').mean()
     station_data_hourly_w = station_data_wind.resample('60min').mean()
     station_data_hourly_d = station_data_direction.resample('60min').first()
     station_data_hourly.to_csv('hourly_rainfalls_'+station_name+'.csv')
@@ -333,7 +334,7 @@ for i in station_name_list:
     paper_dates = [ts1_pd,ts2_pd,ts3_pd,ts4_pd,ts5_pd,ts7_pd,ts8_pd,ts9_pd]
     
 
-    ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_7,ts_8,ts_9]
+    ts_total = [ts_8,ts_9]
     event_classification = []
     
     for i in ts_total:
@@ -361,16 +362,17 @@ for i in station_name_list:
         start_date1 = i['start']
         end_date1 = i['end']
         station_data = station_data_hourly
-        station_data_temp = station_data_hourly
-        station_data_wind = station_data_hourly_t
+        station_data_temp = station_data_hourly_t
+        station_data_wind = station_data_hourly_w
         station_data_direction = station_data_hourly_d
+        station_data_dew = station_data_hourly_dew
         ts_selected = i
         station_name= station_name
         radar_name = 'KBBX'
         slat = station_lat
         slon = station_lon
         
-        #radar.pull_radar(i['start'], i['end'],station_data_hourly,station_data_hourly_t,station_data_hourly_w,station_data_hourly_d,i,station_name,'KBBX',station_lat,station_lon)
+        radar.pull_radar(i['start'], i['end'],station_data_hourly,station_data_hourly_t,station_data_hourly_w,station_data_hourly_d,station_data_hourly_dew,i,station_name,'KBBX',station_lat,station_lon)
        
         #cb.combine_figures(paper_dates[pp_date],outdirck)
         
@@ -412,25 +414,42 @@ for i in station_name_list:
     title_i = 1
     fig2,ax2 = plt.subplots(figsize=(40, 20))
     plot_text = ['(a)','(b)','(c)']
-    for i in cwe_series.keys():
-        pt = plot_text[title_i-1]
-        additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
-        site = cwe_series[i].split('_')[2]
-        #fig2,ax2 = plt.subplots(figsize=(20, 12.5))
-        #ax2 = fig2.add_subplot(1,1,1)
-        date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
-        dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
-        ax2.bar(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0],width=0.15,color=colors[title_i-1],label=cwe_titles[title_i-1])
-        #fig2.suptitle(cwe_titles[title_i-1], fontsize=30)
-        #ax2.set_title(str(cwe_titles[title_i-1])  , fontsize=40)
-        #date_form = DateFormatter("%d-%Y-%H")
-        #fig2.savefig(site.upper()+'.jpeg')
+    date_filter1 = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+    cumul_ratio = []
+    tt = 0
+    for j in ts_total:
+        date_filter1 = station_data_hourly.loc[j['start']:j['end']]
+        for i in cwe_series.keys():
+            pt = plot_text[tt]
+            additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
+            
+            site = cwe_series[i].split('_')[2]
+            #fig2,ax2 = plt.subplots(figsize=(20, 12.5))
+            #ax2 = fig2.add_subplot(1,1,1)
+            date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+            dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
+            filtered_dt = dt[dt.isin(date_filter1.index.tz_convert(None))]
+            dd_filter = date_filter.loc[filtered_dt.index]
+            #print("ratio for "+ cwe_titles[title_i-1]+": "+str(cumul_ratio))
+            cumul_ratio.append(np.sum(dd_filter[cwe_series[i]][dd_filter[cwe_series[i]]>=0])/np.sum(date_filter1))
+            ax2.bar(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0],width=0.15,color=colors[tt],label=cwe_titles[tt])
+            #fig2.suptitle(cwe_titles[title_i-1], fontsize=30)
+            #ax2.set_title(str(cwe_titles[title_i-1])  , fontsize=40)
+            #date_form = DateFormatter("%d-%Y-%H")
+            #fig2.savefig(site.upper()+'.jpeg')
+            
+            tt = tt + 1
+            # ratio for Forbestown (866 m): 2.6131014116887026
+            # ratio for Brush Creek (1085 m): 5.481537056951976
+            # ratio for Pike County (1132 m): 4.3189513976975435
+            #plt.close('all')
+        pd.DataFrame(cumul_ratio).to_csv('cumulative_ratio_pulse'+str(title_i)+'.csv')
+        cumul_ratio = []
+        tt = 0
         title_i = title_i + 1
-        
-        #plt.close('all')
     #fig2,ax2 = plt.subplots(figsize=(40, 20))
-    date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
-    ax2.bar(date_filter.index,date_filter,color=colors[3],width=0.15,label="Oroville Municipal Airport (194 ft)")
+    date_filter = date_filter1
+    ax2.bar(date_filter.index,date_filter,color=colors[3],width=0.15,label="Oroville Municipal Airport (59 m)")
     fig2.suptitle("Hourly Precipitation Record near \n Oroville Dam in February 2017", fontsize=50,fontweight='bold')
     plt.ylabel('Precipiation (mm)', fontsize=70)
     plt.xlabel('Day of Month', fontsize=70)
@@ -475,8 +494,38 @@ for i in station_name_list:
         plt.xlabel('Day:Hour', fontsize=70)
         plt.xticks(fontsize=60)
         plt.yticks(fontsize=60)
+        
+        
+        date_filter_direction_text = station_data_direction.copy()[ts_total[i]['start']:ts_total[i]['end']]
+        
+        date_filter_direction = station_data_direction[ts_total[i]['start']:ts_total[i]['end']]
+        date_filter_temp = station_data_temp[ts_total[i]['start']:ts_total[i]['end']]
+        date_filter_dew = station_data_dew[ts_total[i]['start']:ts_total[i]['end']]
+       
+        date_filter_direction_text[(date_filter_direction>=157.5) & (date_filter_direction <202.5)] = 'S'
+        date_filter_direction_text[(date_filter_direction>=202.5) & (date_filter_direction <247.5)] = 'SW'
+        date_filter_direction_text[(date_filter_direction>=247.5) & (date_filter_direction <292.5)] = 'W'
+        date_filter_direction_text[(date_filter_direction>=292.5) & (date_filter_direction <337.5)] = 'NW'
+        date_filter_direction_text[(date_filter_direction>=337.5) | (date_filter_direction <22.5)] = 'N'
+        date_filter_direction_text[(date_filter_direction>=22.5) & (date_filter_direction <67.5)] = 'NE'
+        date_filter_direction_text[(date_filter_direction>=67.5) & (date_filter_direction <112.5)] = 'E'
+        date_filter_direction_text[(date_filter_direction>=112.5) & (date_filter_direction <157.5)] = 'SE'
+        for rect in np.arange(0,len(bar4)):
+            height = bar4[rect].get_height()
+            ax4.text(bar4[rect].get_x() + bar4[rect].get_width() / 2.0, height,date_filter_direction_text[rect], ha='center', va='bottom',fontsize=35,fontweight='bold')
+
+        # Add temperature on secondary y-axis
+        ax_temp = ax4.twinx()
+        ax_temp.plot(date_filter_temp.index, date_filter_temp, linestyle="-", color='red', linewidth=6, label="Surface Temperature")
+        ax_temp.set_ylabel('Temperature ($^\circ$C)', fontsize=70)
+        ax_temp.tick_params(axis='y', labelsize=60)
+        dew_mask = np.isfinite(date_filter_dew)
+        # Add dew point on the same secondary y-axis
+        ax_temp.plot(date_filter_dew.index[dew_mask], date_filter_dew[dew_mask], linestyle="-", color='blue', linewidth=6, label="Dew Point Temperature")
+        ax_temp.legend(loc="upper left")
+        
         ax4.grid()
-        plt.legend(fontsize=39,loc='upper right')
+        plt.legend(fontsize=39,loc='upper left')
         #ax2.set_title('Oroville Municipal Airport' , fontsize=40)
         date_form = DateFormatter("%d:%H")
         ax4.xaxis.set_major_formatter(date_form)

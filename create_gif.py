@@ -20,17 +20,30 @@ import imageio
 png_dir = "G://NCFR Thesis//NCFR_Thesis//combined_kove_2017268_2017268//"
 
 pic_dir = "G://NCFR Thesis//NCFR_Thesis//"
-images = []
-for i in sorted(os.listdir(pic_dir)):
-    if i.startswith('combined_kove'):
-        print(i)
-        for file_name in sorted(os.listdir(pic_dir+i)):
-            if file_name.endswith('.png'):
-                file_path = os.path.join(pic_dir,i, file_name)
-                images.append(imageio.imread(file_path))
 
-        # Make it pause at the end so that the viewers can ponder
-        # for _ in range(5):
-        #     images.append(imageio.imread(os.path.join(pic_dir,i)))
 
-        imageio.mimsave(pic_dir+i+"//"+i+'_presentation.gif', images)
+pic_dir=['G://NCFR Thesis//NCFR_Thesis//combined_kove_201721613_201721613',
+'G://NCFR Thesis//NCFR_Thesis//combined_kove_201721718_201721818',
+'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172194_20172214',
+'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017220_2017240',
+'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172615_20172715',
+'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017268_2017268',
+'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172822_20172822',
+'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017290_20172100']
+
+#pic_dir = "G://NCFR Thesis//NCFR_Thesis//combined_kove_2017268_2017268"
+for i in pic_dir:
+    print(i)
+    images = []
+    for file_name in sorted(os.listdir(i)):
+        if file_name.endswith('.png'):
+            print(file_name)
+            file_path = os.path.join(i, file_name)
+            images.append(imageio.imread(file_path))
+    
+    # Make it pause at the end so that the viewers can ponder
+    # for _ in range(5):
+    #     images.append(imageio.imread(os.path.join(pic_dir,i)))
+      
+    imageio.mimsave(i+"//"+'combined_kove.gif', images, loop=0)
+#images=[]

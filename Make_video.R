@@ -7,11 +7,11 @@ library(gtools)
 #                "D:\\PSU Thesis\\data\\kral_GaugeCorr_QPE_01H_20191142_20191182")
 
 
-#radar_dirs <- c("G:\\NCFR Thesis\\NCFR_Thesis\\combined_kove_201721718_201721818\\")
-dirs <- list.dirs("G:\\NCFR Thesis\\NCFR_Thesis\\")
+#radar_dirs <- c("G:\\NCFR Thesis\\NCFR_Thesis\\combined_kove_20172615_20172715\\")
+dirs <- list.dirs("G:/NCFR Thesis/NCFR_Thesis/")
 # ivt_dirs <- grep("IVT_*", dirs, value = TRUE)
 # radar_dirs <- grep("Radar_*", dirs, value = TRUE)
-combined_dirs <- grep("combined_*", dirs, value = TRUE)
+combined_dirs <- grep("G:/NCFR Thesis/NCFR_Thesis/combined_*", dirs, value = TRUE)
 # for (j in ivt_dirs){
 #   regex_folder <- rev(mixedsort(list.files(j,"^IVT.*\\.png$")))
 # 
@@ -57,10 +57,12 @@ combined_dirs <- grep("combined_*", dirs, value = TRUE)
 #   # }
 # }
 
-#IVT combined
-k<- c("G:\\NCFR Thesis\\NCFR_Thesis\\combined_kove_2017268_2017268","G:\\NCFR Thesis\\NCFR_Thesis\\combined_kove_20172214_20172414")
+#IVT combinedG:\\NCFR Thesis\\NCFR_Thesis\\combined_kove_201721718_201721818
+k<- c("G:\\NCFR Thesis\\NCFR_Thesis\\combined_kove_201721718_201721818")#,"G:\\NCFR Thesis\\NCFR_Thesis\\combined_kove_2017220_2017240")
 for (j in k){
-  regex_folder <- mixedsort(list.files(j,"^KDAX.*\\.png$"))
+  print(j)
+  try({
+  regex_folder <- mixedsort(list.files(j,"^KBBX.*\\presentation.png$"))
   
   #for(i in regex_folder){
   # Get a list of image file names in the directory
@@ -70,6 +72,7 @@ for (j in k){
   output_file <- paste0("KOVE_combined_Pulse.mov")
   
   av::av_encode_video(image_files, paste0(j,"\\",output_file), framerate = 7)
+})
   
   # }
 }

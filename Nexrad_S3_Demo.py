@@ -45,7 +45,7 @@ from pyproj import Geod #this is used to convert range/azimuth to lat/lon
 
 import matplotlib.axes as maxes
 
-def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data_wind,station_data_direction,ts_selected,station_name,radar_name,slat,slon):
+def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data_wind,station_data_direction,station_data_dew,ts_selected,station_name,radar_name,slat,slon):
     start_date = dtetme.datetime(start_date1.year,start_date1.month,start_date1.day,start_date1.hour)
     end_date = dtetme.datetime(end_date1.year,end_date1.month,end_date1.day,end_date1.hour)
     images = []
@@ -98,31 +98,39 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                         
                         if ii == "presentation":
                             ax1 = fig.add_subplot(2,1,2)
-                            #fig, ax = plt.subplots(figsize=(20, 20))
-                            # Plot the data!
+                            # Filter data
                             date_filter = station_data[ts_selected['start']:ts_selected['end']]
                             date_filter_temp = station_data_temp[ts_selected['start']:ts_selected['end']]
                             date_filter_wind = station_data_wind[ts_selected['start']:ts_selected['end']]
                             date_filter_direction = station_data_direction[ts_selected['start']:ts_selected['end']]
-                            ax1 = plt.gca()
+                            date_filter_dew = station_data_dew[ts_selected['start']:ts_selected['end']]
                             
-                            
-                           
-                            
-                            #plot temps
-                            ax_temp = plt.twinx()
-                            ax_temp.plot(date_filter_temp.index,date_filter_temp,marker="o", linestyle="-",color='r',linewidth=7)
-                            ax_temp.set_ylabel('Temperature ($^\circ$C)',fontsize=55)
-                            ax_temp.tick_params(axis='both', which='major', labelsize=55)
-                            
-                            #plot precip
-                            bar1 = ax1.bar(date_filter.index,date_filter,width=0.01)
-                            ax1.axvline(x=dt,linewidth=4, color='m')
-                            ax1.set_ylabel('Precipiation (mm)', fontsize=55)
-                            ax1.set_xlabel('Hour', fontsize=50)
-                            ax1.tick_params(axis='both', which='major', labelsize=55)
-                            ax1.set_ylim([0,4.5])
+                            # Plot precipitation as bars
+                            bar1 = ax1.bar(date_filter.index, date_filter, width=0.03, label="Precipitation")
+                            ax1.axvline(x=dt, linewidth=4, color='m', label='Threshold')
+                            ax1.set_ylabel('Precipitation (mm)', fontsize=20)
+                            ax1.set_xlabel('Hour', fontsize=20)
+                            ax1.tick_params(axis='both', which='major', labelsize=17)
+                            ax1.set_ylim([0, max(date_filter.max() * 1.1, 4.5)])
                             ax1.grid()
+                            
+                            # Add temperature on secondary y-axis
+                            ax_temp = ax1.twinx()
+                            ax_temp.plot(date_filter_temp.index, date_filter_temp, linestyle="-", color='red', linewidth=6, label="Surface Temperature")
+                            ax_temp.set_ylabel('Temperature ($^\circ$C)', fontsize=20)
+                            ax_temp.tick_params(axis='y', labelsize=15)
+                            dew_mask = np.isfinite(date_filter_dew)
+                            # Add dew point on the same secondary y-axis
+                            ax_temp.plot(date_filter_dew.index[dew_mask], date_filter_dew[dew_mask], linestyle="-", color='blue', linewidth=6, label="Dew Point Temperature")
+                            ax_temp.legend(loc="upper right")
+                            #plot precip
+                            # bar1 = ax1.bar(date_filter.index,date_filter,width=0.01)
+                            # ax1.axvline(x=dt,linewidth=4, color='m')
+                            # ax1.set_ylabel('Precipiation (mm)', fontsize=55)
+                            # ax1.set_xlabel('Hour', fontsize=50)
+                            # ax1.tick_params(axis='both', which='major', labelsize=55)
+                            # ax1.set_ylim([0,4.5])
+                            # ax1.grid()
                             
                             
                             date_filter_direction_text = date_filter_direction.copy()
@@ -573,7 +581,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                             windspeed_upper = (mupperU_hour ** 2 + mupperV_hour**2)**0.5
                             if  ii == "paper":
                                 mp =  ax2.contourf(lon, lat, windspeed_upper, np.arange(0,120,10), transform=ccrs.PlateCarree(),cmap='gray_r')
-                                mp2 =  ax2.contourf(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar],alpha=0.7)
+                                mp2 =  ax2.contour(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar])
                             if ((ii == "paper" and ((dt.year == list(paper_dates.year)[3]) and (dt.month == list(paper_dates.month)[3]) and (dt.day == list(paper_dates.day)[3]) and (dt.hour == list(paper_dates.hour)[3])))) :
                             
                                 
@@ -587,7 +595,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                                 cbar.set_label(label='250 hPa Winds (m/s)',size=35,labelpad=0.7,fontweight='bold')
                                 cbar.ax.tick_params(labelsize=30)
                                 #ax2.quiver(lon,lat,Uvapor_hour,Vvapor_hour,transform=ccrs.PlateCarree(),regrid_shape=20,color="lightblue")
-                                mp2 =  ax2.contourf(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar],alpha=0.7)
+                                mp2 =  ax2.contour(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar],alpha=0.7)
                                 divider2 = make_axes_locatable(ax2)
                                 cbar_ax2 = divider2.append_axes("bottom", size="5%", axes_class=maxes.Axes, pad=0.01)
                                # cbar_ax = fig.add_axes([0, 0])  # Adjust these values as needed
@@ -607,7 +615,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                                 cbar.set_label(label='250 hPa Winds (m/s)',size=35,labelpad=0.7,fontweight='bold')
                                 cbar.ax.tick_params(labelsize=30)
                                 #ax2.quiver(lon,lat,Uvapor_hour,Vvapor_hour,transform=ccrs.PlateCarree(),regrid_shape=20,color="lightblue")
-                                mp2 =  ax2.contourf(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar],alpha=0.7)
+                                mp2 =  ax2.contour(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar])
                                 divider2 = make_axes_locatable(ax2)
                                 cbar_ax2 = divider2.append_axes("bottom", size="5%", axes_class=maxes.Axes, pad=0.01)
                                # cbar_ax = fig.add_axes([0, 0])  # Adjust these values as needed
