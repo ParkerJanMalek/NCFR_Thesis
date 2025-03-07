@@ -53,6 +53,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                                             user_agent_extra='Resource'))
     bucket = s3.Bucket('noaa-nexrad-level2')
     outdir = 'G:\\NCFR Thesis\\NCFR_Thesis\\combined_'+station_name + '_'+str(start_date.year)+str(start_date.month)+str(start_date.day)+ str(end_date.hour)+'_'+ str(end_date.year)+ str(end_date.month)+ str(end_date.day)+ str(end_date.hour) +'\\'
+    tik = 1
     for dt in rrule.rrule(rrule.HOURLY, dtstart=start_date, until=end_date):
         fig_creation = ['presentation']
         paper_dates = ts_selected['event_rainfall'].index[np.argsort(ts_selected['event_rainfall'])][::-1][0:4].sort_values()
@@ -60,7 +61,6 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
         
         for ii in fig_creation:
             if (ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour))) or (ii == "presentation"):
-                
                 #if ii == "paper" and ((dt.year in paper_dates.year) and (dt.month in paper_dates.month) and (dt.day in paper_dates.day) and (dt.hour in paper_dates.hour)):
                 month = str(dt.month).zfill(2)
                 day = str(dt.day).zfill(2)
@@ -74,11 +74,12 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                     radar_object1 = bucket.objects.filter(Prefix=str(dt.year) + '/' + month + '/' + day + '/KDAX/KDAX'+ str(dt.year) + month + day + '_'+hour)
                 #fig = plt.figure(figsize=(40, 20))
                 p_flag=0
+                
                 for obj in radar_object1:
                    #if p_flag == 0:
                     #%% IMPORT MERRA2 DATA
                     # define metvar
-                    metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAdv']
+                    #metvars = ['SLP', '300W','Z500Anom','SLPAnom','Z850','850T','850TAdv']
                     metvars = ['IVT','850T','SLP','850TAdv']#]
                     #metvar = '300W'
                     if ii == "paper":
@@ -89,7 +90,31 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                         fig = plt.figure(figsize=(60, 20))
                      
                     var=0
-                    plot_text = ['(b)','(c)','(d)','(e)']
+                    if  (ii == "paper" and ((dt.year == list(paper_dates.year)[0]) and (dt.month == list(paper_dates.month)[0]) and (dt.day == list(paper_dates.day)[0]) and (dt.hour == list(paper_dates.hour)[0]))):
+                        tik = 1
+                    elif (ii == "paper" and ((dt.year == list(paper_dates.year)[1]) and (dt.month == list(paper_dates.month)[1]) and (dt.day == list(paper_dates.day)[1]) and (dt.hour == list(paper_dates.hour)[1]))):
+                        tik = 2
+                    elif (ii == "paper" and ((dt.year == list(paper_dates.year)[2]) and (dt.month == list(paper_dates.month)[2]) and (dt.day == list(paper_dates.day)[2]) and (dt.hour == list(paper_dates.hour)[2]))):
+                        tik = 3
+                    elif (ii == "paper" and ((dt.year == list(paper_dates.year)[3]) and (dt.month == list(paper_dates.month)[3]) and (dt.day == list(paper_dates.day)[3]) and (dt.hour == list(paper_dates.hour)[3]))):
+                        tik = 4
+                    else:
+                        tik = 5
+                        
+                    if  tik == 1 and ii == "paper":
+                        plot_text = ['(e)','(i)','(m)','(q)']
+                    if  tik == 2 and ii == "paper":
+                        plot_text = ['(f)','(j)','(n)','(r)']
+                    if tik == 3 and ii == "paper":
+                        plot_text = ['(g)','(k)','(o)','(s)']
+                    if tik == 4 and ii == "paper":
+                        plot_text = ['(h)','(l)','(p)','(t)']
+                    if tik == 5 and ii == "paper":
+                        plot_text = ['(b)','(c)','(d)','(e)']  
+                    if tik == 5 and ii == "presentation":
+                        plot_text = ['','','','']  
+                        
+                    
                     for metvar in metvars:
                         pt = plot_text[var]
                         savestr = obj.key.split("/")[-1]
@@ -108,21 +133,21 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                             # Plot precipitation as bars
                             bar1 = ax1.bar(date_filter.index, date_filter, width=0.03, label="Precipitation")
                             ax1.axvline(x=dt, linewidth=4, color='m', label='Threshold')
-                            ax1.set_ylabel('Precipitation (mm)', fontsize=20)
-                            ax1.set_xlabel('Hour', fontsize=20)
-                            ax1.tick_params(axis='both', which='major', labelsize=17)
+                            ax1.set_ylabel('Precipitation (mm)', fontsize=40)
+                            ax1.set_xlabel('Hour', fontsize=40)
+                            ax1.tick_params(axis='both', which='major', labelsize=40)
                             ax1.set_ylim([0, max(date_filter.max() * 1.1, 4.5)])
                             ax1.grid()
                             
                             # Add temperature on secondary y-axis
                             ax_temp = ax1.twinx()
                             ax_temp.plot(date_filter_temp.index, date_filter_temp, linestyle="-", color='red', linewidth=6, label="Surface Temperature")
-                            ax_temp.set_ylabel('Temperature ($^\circ$C)', fontsize=20)
-                            ax_temp.tick_params(axis='y', labelsize=15)
+                            ax_temp.set_ylabel('Temperature ($^\circ$C)', fontsize=40)
+                            ax_temp.tick_params(axis='y', labelsize=40)
                             dew_mask = np.isfinite(date_filter_dew)
                             # Add dew point on the same secondary y-axis
                             ax_temp.plot(date_filter_dew.index[dew_mask], date_filter_dew[dew_mask], linestyle="-", color='blue', linewidth=6, label="Dew Point Temperature")
-                            ax_temp.legend(loc="upper right")
+                            ax_temp.legend(loc="upper right",fontsize=35)
                             #plot precip
                             # bar1 = ax1.bar(date_filter.index,date_filter,width=0.01)
                             # ax1.axvline(x=dt,linewidth=4, color='m')
@@ -221,11 +246,16 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                         ax.add_feature(cfeature.COASTLINE)
                         ax.add_feature(cfeature.BORDERS, linestyle=':', zorder=3)
                         ax.add_feature(cfeature.STATES, linestyle=':', zorder=3)
-                        
-                        ax.text(0.05, 0.05, '(a)',fontsize=35,fontweight ='bold', transform=ax.transAxes)
-                        
-                      
-                        
+                        if  tik == 1 and ii == "paper":
+                            ax.text(0.05, 0.05, '(a)',fontsize=35,fontweight ='bold', transform=ax.transAxes)
+                        elif  tik == 2 and ii == "paper":
+                            ax.text(0.05, 0.05, '(b)',fontsize=35,fontweight ='bold', transform=ax.transAxes)
+                        elif tik == 3 and ii == "paper":
+                            ax.text(0.05, 0.05, '(c)',fontsize=35,fontweight ='bold', transform=ax.transAxes)
+                        elif tik == 4 and ii == "paper":
+                            ax.text(0.05, 0.05, '(d)',fontsize=35,fontweight ='bold', transform=ax.transAxes)
+                        # else:
+                        #     ax.text(0.05, 0.05, '(a)',fontsize=35,fontweight ='bold', transform=ax.transAxes)
                          # plot grid lines
                         gl = ax.gridlines(draw_labels=False, crs=ccrs.PlateCarree(), color='gray', linewidth=0.3)
                         gl.top_labels = False
@@ -346,7 +376,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                             merra = gridfile.variables['SLP'][:]/100
                             
                         elif metvar == '850T':
-                            merra = gridfile.variables['T850'][:]
+                            merra = gridfile.variables['T850'][:]-273.15
                         
                         
                         
@@ -465,17 +495,17 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                         #     print(np.nanmax(arr))
                         lowanom, highanom = (mini, maxi)
                         #newmap = center_colormap(lowanom, highanom, center=0)
-                        lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':240,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':-10}
-                        highlims = {'Z500':5700,'SLP':1050,'IVT':1700,'300W':56,'850T':293,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':10}
+                        lowlims = {'Z500':2850,'SLP':975,'IVT':0,'300W':0,'850T':-30,'Z500Anom':lowanom,'Z850':1187,'SLPAnom':lowanom,'850TAdv':-10}
+                        highlims = {'Z500':5700,'SLP':1050,'IVT':1700,'300W':56,'850T':37,'Z500Anom':highanom,'Z850':1548,'SLPAnom':highanom,'850TAdv':10}
          
-                        contourstart = {'Z500':3000,'SLP':975,'IVT':250,'300W':5,'850T':240,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':-10}
+                        contourstart = {'Z500':3000,'SLP':975,'IVT':250,'300W':5,'850T':-30,'Z500Anom':-1.75,'Z850':1190,'SLPAnom':-2.25,'850TAdv':-10}
                         contourint = {'Z500':200,'SLP':4,'IVT':100,'300W':5,'850T':2.5,'Z500Anom':0.25,'Z850':30,'SLPAnom':0.25,'850TAdv':1.5}
          
-                        cbarstart = {'Z500':3000,'SLP':975,'IVT':250,'300W':0,'850T':240,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':-10}
+                        cbarstart = {'Z500':3000,'SLP':975,'IVT':250,'300W':0,'850T':-30,'Z500Anom':-2.0,'Z850':1200,'SLPAnom':-2.4,'850TAdv':-10}
                         cbarint = {'Z500':500,'SLP':5,'IVT':150,'300W':10,'850T':5,'Z500Anom':0.5,'Z850':50,'SLPAnom':0.4,'850TAdv':1.5}
          
                         colormap = {'Z500':'jet','SLP':'rainbow','IVT':'gnuplot2_r','300W':'hot_r','850T':'turbo','Z500Anom':'turbo','Z850':'turbo','SLPAnom':'turbo','850TAdv':'coolwarm'}
-                        cbarlabs = {'Z500':'m','SLP':'hPa','IVT':'kg $\mathregular{m^{-1}}$ $\mathregular{s^{-1}}$','300W':'m/s','850T':'K','Z500Anom':r'$\mathbf{\sigma}$','Z850':'m','SLPAnom':r'$\mathbf{\sigma}$','850TAdv':'Degrees/hr'}
+                        cbarlabs = {'Z500':'m','SLP':'hPa','IVT':'kg $\mathregular{m^{-1}}$ $\mathregular{s^{-1}}$','300W':'m/s','850T':'Degrees C','Z500Anom':r'$\mathbf{\sigma}$','Z850':'m','SLPAnom':r'$\mathbf{\sigma}$','850TAdv':'Degrees/hr'}
                         plottitle = {'Z500':'Z500','SLP':'SLP','IVT':'IVT','300W':'300 hPa Wind','850T':'850 hPa Temperature','Z500Anom':'Z500 Anomaly','Z850':'Z850','SLPAnom':'SLP Anomaly','850TAdv':'850 hPa \n Temperature Advection'}
                       #%% PLOT NODES from MATLAB
          
@@ -545,7 +575,7 @@ def pull_radar(start_date1,end_date1,station_data,station_data_temp,station_data
                         
                         if metvar != "IVT":
                             mp =  ax2.contourf(lon, lat, arr, np.arange(contourstart[metvar],highlims[metvar],contourint[metvar]), transform=ccrs.PlateCarree(),cmap=colormap[metvar])
-                        
+                            
                         #if metvar=="850TAdv":
                         #    mp =  ax2.contourf(lon, lat, arr, np.linspace(-4,4,5), transform=ccrs.PlateCarree(),cmap=colormap[metvar])
                             

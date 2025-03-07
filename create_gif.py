@@ -17,19 +17,17 @@ from PIL import Image
 import imageio
 
 
-png_dir = "G://NCFR Thesis//NCFR_Thesis//combined_kove_2017268_2017268//"
 
-pic_dir = "G://NCFR Thesis//NCFR_Thesis//"
+pic_dir=['G://NCFR Thesis//NCFR_Thesis//combined_kove_20172615_20172715',
+]
 
-
-pic_dir=['G://NCFR Thesis//NCFR_Thesis//combined_kove_201721613_201721613',
-'G://NCFR Thesis//NCFR_Thesis//combined_kove_201721718_201721818',
-'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172194_20172214',
-'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017220_2017240',
-'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172615_20172715',
-'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017268_2017268',
-'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172822_20172822',
-'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017290_20172100']
+# pic_dir=['G://NCFR Thesis//NCFR_Thesis//combined_kove_201721613_201721613',
+# 'G://NCFR Thesis//NCFR_Thesis//combined_kove_201721718_201721818',
+# 'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172194_20172214',
+# 'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017220_2017240',
+# 'G://NCFR Thesis//NCFR_Thesis//combined_kove_20172615_20172715',
+# 'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017268_2017268',
+# 'G://NCFR Thesis//NCFR_Thesis//combined_kove_2017290_20172100']
 
 #pic_dir = "G://NCFR Thesis//NCFR_Thesis//combined_kove_2017268_2017268"
 for i in pic_dir:

@@ -178,9 +178,9 @@ for i in station_name_list:
 
 
     # resample to only the hourly observations. For inter-hourly observations, the mean of these values is taken
-    station_data_hourly = station_data_precip.resample('60min').mean()
-    station_data_hourly_t = station_data_temp.resample('15min').mean()
-    station_data_hourly_dew = station_data_dew.resample('15min').mean()
+    station_data_hourly = station_data_precip.resample('60min').last()
+    station_data_hourly_t = station_data_temp.resample('15min').mean().ffill()
+    station_data_hourly_dew = station_data_dew.resample('15min').mean().ffill()
     station_data_hourly_w = station_data_wind.resample('60min').mean()
     station_data_hourly_d = station_data_direction.resample('60min').first()
     station_data_hourly.to_csv('hourly_rainfalls_'+station_name+'.csv')
@@ -324,7 +324,7 @@ for i in station_name_list:
     ts8_pd = ts_8['event_rainfall'].index[np.argsort(ts_8['event_rainfall'])][::-1][0:4].sort_values()
     
     ts_9 = pulse_split[5].copy()
-    ts_9['start'] = pd.Timestamp('2017-2-19-06',tz='UTC')
+    ts_9['start'] = pd.Timestamp('2017-2-19-18',tz='UTC')
     ts_9['synoptic_event'] = 7
     ts_9['pulse_event'] = 9
     adjust_events(ts_9) 
@@ -334,7 +334,7 @@ for i in station_name_list:
     paper_dates = [ts1_pd,ts2_pd,ts3_pd,ts4_pd,ts5_pd,ts7_pd,ts8_pd,ts9_pd]
     
 
-    ts_total = [ts_8,ts_9]
+    ts_total = [ts_1,ts_2,ts_3,ts_4,ts_5,ts_7,ts_8,ts_9]
     event_classification = []
     
     for i in ts_total:
@@ -383,7 +383,7 @@ for i in station_name_list:
         ax.set_title('Event #' + str(multimodal)  , fontsize=30)
         plt.xticks(fontsize=20,rotation=30)
         plt.yticks(fontsize=20)
-        plt.ylim([0,4.5])
+        plt.ylim([0,5.5])
         ax.grid()
         date_form = DateFormatter("%d:%H")
         ax.xaxis.set_major_formatter(date_form)
@@ -395,7 +395,7 @@ for i in station_name_list:
     fig.tight_layout(rect=[0.05, 0.05, 1, 0.93])   
     fig.supylabel('Precipiation (mm)', fontsize=35)
     fig.supxlabel('Day:Hour', fontsize=35)
-    fig.suptitle("February 2017 Rainfall Pulses at Oroville Municipal Airport",fontsize=35)
+   #fig.suptitle("February 2017 Rainfall Pulses at Oroville Municipal Airport",fontsize=35)
     fig.savefig(station_name + "_Pulses"+ '.jpeg')
     plt.close('all')
     
@@ -406,76 +406,144 @@ for i in station_name_list:
     
     # fig1,ax1 = plt.subplots(figsize=(20, 12.5))
     
-    cwe_series = {'CDEC_MFF_2002_2023_V2':'CDEC_MFF_FBS_2840','CDEC_NFF_2002_2023':'CDEC_NFF_BRS_3560','CDEC_UYB_2002_2023':'CDEC_UYB_PKC_3714'}
-    cwe_titles = ['Forbestown (866 m)','Brush Creek (1085 m)','Pike County (1132 m)']
+    cwe_series_files = ['CDEC_MFF_2002_2023_V2','CDEC_NFF_2002_2023','CDEC_UYB_2002_2023','CDEC_UYB_2002_2023','CDEC_UYB_2002_2023','CDEC_NFF_2002_2023']
+    cwe_series = ['CDEC_MFF_FBS_2840','CDEC_NFF_BRS_3560','CDEC_UYB_PKC_3714','CDEC_UYB_CAM_2755','CDEC_UYB_SBY_3810','CDEC_NFF_FOR_5202']
+    cwe_titles = ['Forbestown FBS (866 m)','Brush Creek BRS (1085 m)','Pike County PKC (1132 m)','Camptonville CAM (840 m)','Strawberry Valley SBY (1161 m)','Four Trees FOR (1586 m)']
     colors = ['#377eb8', '#ff7f00', '#4daf4a',
                   '#f781bf', '#a65628', '#984ea3',
                   '#999999', '#e41a1c', '#dede00']
     title_i = 1
-    fig2,ax2 = plt.subplots(figsize=(40, 20))
     plot_text = ['(a)','(b)','(c)']
     date_filter1 = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
     cumul_ratio = []
+    cumul_ratio_hour = []
+    cumul_ratio_hour_list = []
     tt = 0
-    for j in ts_total:
-        date_filter1 = station_data_hourly.loc[j['start']:j['end']]
-        for i in cwe_series.keys():
-            pt = plot_text[tt]
-            additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
-            
-            site = cwe_series[i].split('_')[2]
-            #fig2,ax2 = plt.subplots(figsize=(20, 12.5))
-            #ax2 = fig2.add_subplot(1,1,1)
-            date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
-            dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
-            filtered_dt = dt[dt.isin(date_filter1.index.tz_convert(None))]
-            dd_filter = date_filter.loc[filtered_dt.index]
-            #print("ratio for "+ cwe_titles[title_i-1]+": "+str(cumul_ratio))
-            cumul_ratio.append(np.sum(dd_filter[cwe_series[i]][dd_filter[cwe_series[i]]>=0])/np.sum(date_filter1))
-            ax2.bar(dt[date_filter[cwe_series[i]]>=0],date_filter[cwe_series[i]][date_filter[cwe_series[i]]>=0],width=0.15,color=colors[tt],label=cwe_titles[tt])
-            #fig2.suptitle(cwe_titles[title_i-1], fontsize=30)
-            #ax2.set_title(str(cwe_titles[title_i-1])  , fontsize=40)
-            #date_form = DateFormatter("%d-%Y-%H")
-            #fig2.savefig(site.upper()+'.jpeg')
-            
-            tt = tt + 1
-            # ratio for Forbestown (866 m): 2.6131014116887026
-            # ratio for Brush Creek (1085 m): 5.481537056951976
-            # ratio for Pike County (1132 m): 4.3189513976975435
-            #plt.close('all')
-        pd.DataFrame(cumul_ratio).to_csv('cumulative_ratio_pulse'+str(title_i)+'.csv')
-        cumul_ratio = []
-        tt = 0
-        title_i = title_i + 1
-    #fig2,ax2 = plt.subplots(figsize=(40, 20))
+    date_filter1 = station_data_hourly
+    fig2,ax2 = plt.subplots(figsize=(40, 20))
+    cdec_total = []
+    for i in cwe_series_files:
+        
+        # pt = plot_text[tt]
+          additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
+         
+          site = cwe_series[tt].split('_')[2]
+          #fig2,ax2 = plt.subplots(figsize=(20, 12.5))
+          #ax2 = fig2.add_subplot(1,1,1)
+          date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+          date_filter_total = additional_time_series[
+              (additional_time_series['YYYYMMDDHH'].astype(str) >= '2017020211') &
+              (additional_time_series['YYYYMMDDHH'].astype(str) <= '2017022104')
+              ]
+          dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
+        
+         
+          ax2.bar(dt[date_filter[cwe_series[tt]]>=0],date_filter[cwe_series[tt]][date_filter[cwe_series[tt]]>=0],width=0.15,color=colors[tt],label=cwe_titles[tt])
+          
+          #fig2.suptitle(cwe_titles[title_i-1], fontsize=30)
+          #ax2.set_title(str(cwe_titles[title_i-1])  , fontsize=40)
+          #date_form = DateFormatter("%d-%Y-%H")
+          #fig2.savefig(site.upper()+'.jpeg')
+          cdec_total.append(np.sum(date_filter[cwe_series[tt]][date_filter[cwe_series[tt]]>=0]))
+          tt = tt + 1
+    
     date_filter = date_filter1
-    ax2.bar(date_filter.index,date_filter,color=colors[3],width=0.15,label="Oroville Municipal Airport (59 m)")
-    fig2.suptitle("Hourly Precipitation Record near \n Oroville Dam in February 2017", fontsize=50,fontweight='bold')
+    ax2.bar(date_filter.index,date_filter,color=colors[7],width=0.15,label="Oroville Municipal Airport (59 m)")
+    #fig2.suptitle("Hourly Precipitation Record near \n Oroville Dam in February 2017", fontsize=50,fontweight='bold')
     plt.ylabel('Precipiation (mm)', fontsize=70)
     plt.xlabel('Day of Month', fontsize=70)
     plt.xticks(fontsize=60)
     plt.yticks(fontsize=60)
     ax2.grid()
-    plt.legend(fontsize=39,loc='upper left')
+    plt.legend(fontsize=39,loc='upper right')
     #ax2.set_title('Oroville Municipal Airport' , fontsize=40)
     date_form = DateFormatter("%d")
     ax2.xaxis.set_major_formatter(date_form)
     ax2 = fig2.gca()
     ax2.set_ylim([0, None])
     #fig2.tight_layout(rect=[0.05, 0.05, 1, 0.93]) 
-    fig2.savefig('Precip_Time_Series_Oroville'+'.jpeg')
+    fig2.savefig('Precip_Time_Series_Oroville1'+'.jpeg')
     plt.close('all')
+    tt = 0
+    
+    fig22,ax22 = plt.subplots(figsize=(40, 20))
+    for j in ts_total:
+        date_filter1 = station_data_hourly.loc[j['start']:j['end']]
+        bottoms = np.zeros(len(date_filter1))  # Initialize an array to track the bottom position of each stacked bar
+        jj = 0
+        for i in cwe_series_files:
+           # pt = plot_text[tt]
+            additional_time_series = pd.read_csv('G:\\NCFR Thesis\\NCFR_Thesis\\'+i+'.csv')
+            
+            site = cwe_series[jj].split('_')[2]
+            #fig2,ax2 = plt.subplots(figsize=(20, 12.5))
+            #ax2 = fig2.add_subplot(1,1,1)
+            date_filter = additional_time_series.loc[additional_time_series['YYYYMMDDHH'].apply(str).str.contains('201702'),:]#station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
+            dt = pd.to_datetime(date_filter['YYYYMMDDHH'].apply(str),format='%Y%m%d%H')
+            filtered_dt = dt[dt.isin(date_filter1.index.tz_convert(None))]
+            dd_filter = date_filter.loc[filtered_dt.index]
+            dt_filter2 = dd_filter[cwe_series[tt]]
+            #dt_filter2.loc[dt_filter2 < 0] = pd.NA
+            dt_filter2.index = date_filter1.index
+            #print("ratio for "+ cwe_titles[title_i-1]+": "+str(cumul_ratio))
+            #total as a scalar 
+            cumul_ratio.append(np.sum(dd_filter[cwe_series[jj]][dd_filter[cwe_series[jj]]>=0])/np.sum(date_filter1))
+                  
+            cumul_ratio_hour = date_filter1/dt_filter2
+            
+            
+            cumul_ratio_hour.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+            cumul_ratio_hour[cumul_ratio_hour < 0] = 0  # Replace negative values with 0
+            
+            ax22.plot(cumul_ratio_hour.index, cumul_ratio_hour.values, color=colors[tt], label=cwe_titles[tt], linewidth=6,marker='o',markersize=10)
+            
+            cumul_ratio_hour_list.append(cumul_ratio_hour)
+            #fig22.suptitle("Pulse " + str(title_i) + " Orographic Ratio to Oroville Airport Rainfall", fontsize=50,fontweight='bold')
+            
+            date_form = DateFormatter("%d:%H")
+            ax22.xaxis.set_major_formatter(date_form)
+            
+            plt.ylabel('Precipiation Ratio', fontsize=60)
+            plt.xlabel('Day:Hour', fontsize=60)
+            plt.xticks(fontsize=45)
+            plt.yticks(fontsize=45)
+            plt.legend(fontsize=39,loc='upper right')
+            
+            
+            ax2.bar(dt[date_filter[cwe_series[jj]]>=0],date_filter[cwe_series[jj]][date_filter[cwe_series[jj]]>=0],width=0.15,color=colors[tt],label=cwe_titles[tt])
+            #fig2.suptitle(cwe_titles[title_i-1], fontsize=30)
+            #ax2.set_title(str(cwe_titles[title_i-1])  , fontsize=40)
+            #date_form = DateFormatter("%d-%Y-%H")
+            #fig2.savefig(site.upper()+'.jpeg')
+            
+            tt = tt + 1
+            jj = jj + 1
+            # ratio for Forbestown (866 m): 2.6131014116887026
+            # ratio for Brush Creek (1085 m): 5.481537056951976
+            # ratio for Pike County (1132 m): 4.3189513976975435
+            #plt.close('all')
+        pd.DataFrame(cumul_ratio_hour_list).to_csv('cumulative_ratio_pulse'+str(title_i)+'.csv')
+        #pd.DataFrame(cumul_ratio_hour).to_csv('cumulative_ratio_hourly_pulse'+str(title_i)+'.csv')
+        cumul_ratio = []
+        cumul_ratio_hour_list=[]
+        tt = 0
+        fig22.savefig('Orographic Ratio'+str(title_i)+'.jpeg')
+        title_i = title_i + 1
+        fig22,ax22 = plt.subplots(figsize=(40, 20))
+    #fig2,ax2 = plt.subplots(figsize=(40, 20))
+    
+   
     
     fig3,ax3 = plt.subplots(figsize=(40, 20))
     #date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
     ax3.bar(pulse_split[1]['event_rainfall'].index,pulse_split[1]['event_rainfall'],color=colors[0],width=0.01,label="Hourly Precipitation Totals (mm)")
-    fig3.suptitle("Precipitation Pulse Inspection Example", fontsize=50,fontweight='bold')
+    #fig3.suptitle("Precipitation Pulse Inspection Example", fontsize=50,fontweight='bold')
     plt.ylabel('Precipiation (mm)', fontsize=70)
     plt.xlabel('Day:Hour', fontsize=70)
     plt.xticks(fontsize=60)
     plt.yticks(fontsize=60)
     ax3.grid()
-    plt.legend(fontsize=39,loc='upper right')
+    #plt.legend(fontsize=39,loc='upper right')
     #ax2.set_title('Oroville Municipal Airport' , fontsize=40)
     date_form = DateFormatter("%d:%H")
     ax3.xaxis.set_major_formatter(date_form)
@@ -486,10 +554,11 @@ for i in station_name_list:
     
     
     for i in np.arange(0,len(ts_total)):
+       
         fig4,ax4 = plt.subplots(figsize=(40, 20))
         #date_filter = station_data_hourly.loc[(station_data_hourly.index.year == 2017) & (station_data_hourly.index.month == 2)]
         bar4 = ax4.bar(ts_total[i]['event_rainfall'].index,ts_total[i]['event_rainfall'],color=colors[0],width=0.01)
-        fig4.suptitle("Pulse " + str(i+1), fontsize=50,fontweight='bold')
+        #fig4.suptitle("Pulse " + str(i+1), fontsize=50,fontweight='bold')
         plt.ylabel('Precipiation (mm)', fontsize=70)
         plt.xlabel('Day:Hour', fontsize=70)
         plt.xticks(fontsize=60)
@@ -535,10 +604,8 @@ for i in station_name_list:
             
             # Loop over all timestamps in t and plot a vertical line for each
         for k, timestamp in enumerate(t):
-            print(k)
-            print(timestamp)
-            color = ['m', 'r', 'g', 'b'][k % 4]  # Cycle through colors for up to 4 events
-            ax4.axvline(x=timestamp, linewidth=4, color=color)  # Plot vertical line at event timestamp
+           # color = ['m', 'r', 'g', 'b'][k % 4]  # Cycle through colors for up to 4 events
+            #ax4.axvline(x=timestamp, linewidth=4, color=color)  # Plot vertical line at event timestamp
             
             # Add text above the vertical line
             ax4.text(timestamp, ax4.get_ylim()[1] ,  # Place text just above the top of the plot
